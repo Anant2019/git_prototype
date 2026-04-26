@@ -1,0 +1,3000 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Backable — Investment Platform</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #f6f4ef; color: #15140f; font-family: "Inter Tight", -apple-system, BlinkMacSystemFont, sans-serif; }
+  button { font-family: inherit; cursor: pointer; }
+  input, textarea, select { font-family: inherit; }
+  ::selection { background: #1f5d3a; color: #fbfaf6; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(20,18,12,0.15); border-radius: 3px; }
+  @media (max-width: 767px) {
+    .desktop-only { display: none !important; }
+  }
+  @media (min-width: 768px) {
+    .mobile-only { display: none !important; }
+  }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+// ═══════════════════════════════════════════════
+// 1. DESIGN SYSTEM
+// ═══════════════════════════════════════════════
+
+const TOKENS = {
+  bg:       '#f6f4ef',
+  surface:  '#fbfaf6',
+  card:     '#ffffff',
+  ink:      '#15140f',
+  ink2:     '#3a3830',
+  ink3:     '#6e6b60',
+  ink4:     '#a09c90',
+  hair:     'rgba(20,18,12,0.10)',
+  hair2:    'rgba(20,18,12,0.06)',
+  raise:    '#1f5d3a',
+  raiseBg:  '#e6efe7',
+  warn:     '#8a4a1c',
+  warnBg:   '#f3e6d8',
+  closing:  '#7a1f1f',
+  closingBg:'#f0e0de',
+  blue:     '#1a3a5c',
+  blueBg:   '#e0e8f0',
+};
+
+const SERIF = `"Source Serif 4","Source Serif Pro","Noto Serif",Georgia,serif`;
+const SANS  = `"Inter Tight",-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif`;
+const MONO  = `"JetBrains Mono","IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace`;
+
+function useMediaQuery(q) {
+  const [m, setM] = React.useState(() => window.matchMedia(q).matches);
+  React.useEffect(() => {
+    const mq = window.matchMedia(q);
+    const h = (e) => setM(e.matches);
+    mq.addEventListener('change', h);
+    return () => mq.removeEventListener('change', h);
+  }, [q]);
+  return m;
+}
+
+// ═══════════════════════════════════════════════
+// 2. ICONS
+// ═══════════════════════════════════════════════
+
+const Icon = {
+  search:   (s=14) => <svg width={s} height={s} viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="4.5" stroke="currentColor" strokeWidth="1.2"/><path d="M10.5 10.5l3 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>,
+  up:       (s=14) => <svg width={s} height={s} viewBox="0 0 16 16" fill="none"><path d="M8 3l5 6H3l5-6z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/></svg>,
+  upFilled: (s=14) => <svg width={s} height={s} viewBox="0 0 16 16"><path d="M8 3l5 6H3l5-6z" fill="currentColor"/></svg>,
+  comment:  (s=14) => <svg width={s} height={s} viewBox="0 0 16 16" fill="none"><path d="M3 4.5A1.5 1.5 0 0 1 4.5 3h7A1.5 1.5 0 0 1 13 4.5v5A1.5 1.5 0 0 1 11.5 11H6.5l-3 2.5V4.5z" stroke="currentColor" strokeWidth="1.2"/></svg>,
+  bookmark: (s=14) => <svg width={s} height={s} viewBox="0 0 16 16" fill="none"><path d="M4 2.5h8v11l-4-2.5L4 13.5v-11z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/></svg>,
+  bookmarkFilled:(s=14) => <svg width={s} height={s} viewBox="0 0 16 16"><path d="M4 2.5h8v11l-4-2.5L4 13.5v-11z" fill="currentColor"/></svg>,
+  check:    (s=14) => <svg width={s} height={s} viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+  arrow:    (s=14) => <svg width={s} height={s} viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+  chevron:  (s=14, dir='down') => { const r={down:0,up:180,left:90,right:-90}[dir]; return <svg width={s} height={s} viewBox="0 0 16 16" fill="none" style={{transform:`rotate(${r}deg)`}}><path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>; },
+  globe:    (s=14) => <svg width={s} height={s} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="currentColor" strokeWidth="1.2"/><path d="M2.5 8h11M8 2.5c2 2 2 9 0 11M8 2.5c-2 2-2 9 0 11" stroke="currentColor" strokeWidth="1.2"/></svg>,
+  shield:   (s=14) => <svg width={s} height={s} viewBox="0 0 16 16" fill="none"><path d="M8 2l5 2v4c0 3-2.5 5-5 6-2.5-1-5-3-5-6V4l5-2z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/></svg>,
+  play:     (s=14) => <svg width={s} height={s} viewBox="0 0 16 16"><path d="M5 3l8 5-8 5V3z" fill="currentColor"/></svg>,
+  doc:      (s=14) => <svg width={s} height={s} viewBox="0 0 16 16" fill="none"><path d="M4 2h6l3 3v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z" stroke="currentColor" strokeWidth="1.2"/><path d="M10 2v3h3" stroke="currentColor" strokeWidth="1.2"/></svg>,
+  plus:     (s=14) => <svg width={s} height={s} viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>,
+  spark:    (s=14) => <svg width={s} height={s} viewBox="0 0 16 16" fill="none"><path d="M8 2v4M8 10v4M2 8h4M10 8h4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>,
+  filter:   (s=14) => <svg width={s} height={s} viewBox="0 0 16 16" fill="none"><path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>,
+  user:     (s=14) => <svg width={s} height={s} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="6" r="2.5" stroke="currentColor" strokeWidth="1.2"/><path d="M3 13c.5-2.5 2.5-4 5-4s4.5 1.5 5 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>,
+  external: (s=12) => <svg width={s} height={s} viewBox="0 0 16 16" fill="none"><path d="M6 4h6v6M12 4l-7 7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+  bell:     (s=14) => <svg width={s} height={s} viewBox="0 0 16 16" fill="none"><path d="M8 2a4 4 0 0 1 4 4v3l1 2H3l1-2V6a4 4 0 0 1 4-4z" stroke="currentColor" strokeWidth="1.2"/><path d="M6.5 13a1.5 1.5 0 0 0 3 0" stroke="currentColor" strokeWidth="1.2"/></svg>,
+  home:     (s=14) => <svg width={s} height={s} viewBox="0 0 16 16" fill="none"><path d="M2 8l6-5 6 5v6H10v-3H6v3H2V8z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/></svg>,
+  settings: (s=14) => <svg width={s} height={s} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2" stroke="currentColor" strokeWidth="1.2"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.1 3.1l1.4 1.4M11.5 11.5l1.4 1.4M3.1 12.9l1.4-1.4M11.5 4.5l1.4-1.4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>,
+  flag:     (s=14) => <svg width={s} height={s} viewBox="0 0 16 16" fill="none"><path d="M3 2v12M3 2h9l-2 4 2 4H3" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/></svg>,
+  chart:    (s=14) => <svg width={s} height={s} viewBox="0 0 16 16" fill="none"><path d="M2 12l4-4 3 2 5-6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+  clock:    (s=14) => <svg width={s} height={s} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="currentColor" strokeWidth="1.2"/><path d="M8 5v3.5l2 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>,
+  menu:     (s=14) => <svg width={s} height={s} viewBox="0 0 16 16" fill="none"><path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>,
+  close:    (s=14) => <svg width={s} height={s} viewBox="0 0 16 16" fill="none"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>,
+  star:     (s=14) => <svg width={s} height={s} viewBox="0 0 16 16" fill="none"><path d="M8 2l1.8 3.6L14 6.3l-3 2.9.7 4.1L8 11.3l-3.7 1.9.7-4.1-3-2.9 4.2-.7L8 2z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/></svg>,
+  starFilled:(s=14) => <svg width={s} height={s} viewBox="0 0 16 16"><path d="M8 2l1.8 3.6L14 6.3l-3 2.9.7 4.1L8 11.3l-3.7 1.9.7-4.1-3-2.9 4.2-.7L8 2z" fill="currentColor"/></svg>,
+};
+
+// ═══════════════════════════════════════════════
+// 3. ATOMS
+// ═══════════════════════════════════════════════
+
+function Logo({ size=18, color }) {
+  const c = color || TOKENS.ink;
+  return (
+    <span style={{display:'inline-flex',alignItems:'center',gap:8,color:c}}>
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+        <rect x="2.5" y="2.5" width="19" height="19" rx="4" stroke={c} strokeWidth="1.4"/>
+        <path d="M8 8h5a3.5 3.5 0 0 1 0 7H8V8z" stroke={c} strokeWidth="1.4" fill="none"/>
+        <path d="M8 12h5a3.5 3.5 0 0 1 0 7H8v-7z" stroke={c} strokeWidth="1.4" fill="none"/>
+      </svg>
+      <span style={{fontFamily:SERIF,fontWeight:600,fontSize:size*0.95,letterSpacing:'-0.01em'}}>Backable</span>
+    </span>
+  );
+}
+
+function Pill({ tone='neutral', children, dot=false, style={} }) {
+  const tones = {
+    neutral: { bg:'#efece4', fg:TOKENS.ink2 },
+    raise:   { bg:TOKENS.raiseBg, fg:TOKENS.raise },
+    concept: { bg:'#ece8de', fg:TOKENS.ink2 },
+    warn:    { bg:TOKENS.warnBg, fg:TOKENS.warn },
+    closing: { bg:TOKENS.closingBg, fg:TOKENS.closing },
+    outline: { bg:'transparent', fg:TOKENS.ink2, border:TOKENS.hair },
+    blue:    { bg:TOKENS.blueBg, fg:TOKENS.blue },
+  };
+  const t = tones[tone] || tones.neutral;
+  return (
+    <span style={{
+      display:'inline-flex',alignItems:'center',gap:6,
+      fontFamily:SANS,fontSize:11,fontWeight:500,letterSpacing:'0.01em',
+      padding:'3px 8px',borderRadius:999,
+      background:t.bg,color:t.fg,
+      border:`0.5px solid ${t.border||'transparent'}`,
+      whiteSpace:'nowrap',...style,
+    }}>
+      {dot && <span style={{width:6,height:6,borderRadius:999,background:t.fg}}/>}
+      {children}
+    </span>
+  );
+}
+
+function Btn({ variant='primary', size='md', children, onClick, style={}, icon, full, disabled }) {
+  const variants = {
+    primary: { bg:TOKENS.ink,    fg:'#fbfaf6', border:TOKENS.ink },
+    raise:   { bg:TOKENS.raise,  fg:'#fbfaf6', border:TOKENS.raise },
+    ghost:   { bg:'transparent', fg:TOKENS.ink, border:TOKENS.hair },
+    quiet:   { bg:'#efece4',     fg:TOKENS.ink, border:'transparent' },
+    danger:  { bg:'transparent', fg:TOKENS.closing, border:TOKENS.hair },
+  };
+  const sizes = {
+    sm: { pad:'6px 12px',  fs:12, h:28 },
+    md: { pad:'9px 16px',  fs:13, h:36 },
+    lg: { pad:'12px 22px', fs:14, h:44 },
+  };
+  const v = variants[variant], s = sizes[size];
+  return (
+    <button onClick={onClick} disabled={disabled} style={{
+      display:'inline-flex',alignItems:'center',justifyContent:'center',gap:8,
+      fontFamily:SANS,fontWeight:500,fontSize:s.fs,letterSpacing:'-0.005em',
+      padding:s.pad,height:s.h,width:full?'100%':'auto',
+      background:v.bg,color:v.fg,border:`0.5px solid ${v.border}`,
+      borderRadius:8,cursor:disabled?'not-allowed':'pointer',
+      transition:'all 120ms',opacity:disabled?0.5:1,
+      whiteSpace:'nowrap',...style,
+    }}
+      onMouseEnter={(e)=>{ if(!disabled) e.currentTarget.style.opacity='0.82'; }}
+      onMouseLeave={(e)=>{ if(!disabled) e.currentTarget.style.opacity='1'; }}
+    >{icon}{children}</button>
+  );
+}
+
+function Input({ value, onChange, placeholder, type='text', icon, style={}, full }) {
+  return (
+    <div style={{
+      display:'flex',alignItems:'center',gap:8,
+      padding:'0 12px',height:38,
+      background:TOKENS.surface,border:`0.5px solid ${TOKENS.hair}`,
+      borderRadius:8,width:full?'100%':'auto',...style,
+    }}>
+      {icon && <span style={{color:TOKENS.ink3,display:'inline-flex'}}>{icon}</span>}
+      <input type={type} value={value||''} onChange={(e)=>onChange?.(e.target.value)}
+        placeholder={placeholder}
+        style={{flex:1,border:0,outline:0,background:'transparent',
+          fontFamily:SANS,fontSize:13,color:TOKENS.ink,minWidth:0}}/>
+    </div>
+  );
+}
+
+function Card({ children, style={}, onClick, hoverable }) {
+  const [h,setH] = React.useState(false);
+  return (
+    <div onClick={onClick}
+      onMouseEnter={()=>hoverable&&setH(true)}
+      onMouseLeave={()=>hoverable&&setH(false)}
+      style={{
+        background:TOKENS.card,
+        border:`0.5px solid ${h?TOKENS.ink4:TOKENS.hair}`,
+        borderRadius:14,cursor:onClick?'pointer':'default',
+        transition:'all 160ms',
+        boxShadow:h?'0 4px 16px rgba(20,18,12,0.08)':'0 1px 0 rgba(20,18,12,0.02)',
+        ...style,
+      }}
+    >{children}</div>
+  );
+}
+
+function CoverArt({ tone='#c0bfb5', label, height=180, style={} }) {
+  return (
+    <div style={{
+      position:'relative',width:'100%',height,background:tone,
+      backgroundImage:`repeating-linear-gradient(135deg,transparent 0 14px,rgba(255,255,255,0.08) 14px 15px)`,
+      borderRadius:10,overflow:'hidden',...style,
+    }}>
+      {label && <div style={{position:'absolute',left:12,bottom:10,fontFamily:MONO,fontSize:10,color:'rgba(255,255,255,0.7)',textTransform:'uppercase',letterSpacing:'0.08em'}}>{label}</div>}
+    </div>
+  );
+}
+
+function Avatar({ name, initials, tone, size=36 }) {
+  return (
+    <div title={name} style={{
+      width:size,height:size,borderRadius:999,
+      background:tone||'#3a3830',color:'#fbfaf6',
+      fontFamily:SANS,fontWeight:500,fontSize:size*0.36,
+      display:'inline-flex',alignItems:'center',justifyContent:'center',
+      letterSpacing:'0.02em',flexShrink:0,
+    }}>{initials||(name||'').slice(0,2)}</div>
+  );
+}
+
+function Progress({ pct, height=4, tone }) {
+  return (
+    <div style={{width:'100%',height,borderRadius:999,background:TOKENS.hair2,overflow:'hidden'}}>
+      <div style={{width:`${Math.min(100,Math.max(0,pct))}%`,height:'100%',background:tone||TOKENS.raise,borderRadius:999}}/>
+    </div>
+  );
+}
+
+function Stat({ k, v, sub, accent }) {
+  return (
+    <div>
+      <div style={{fontFamily:MONO,fontSize:10,letterSpacing:'0.1em',textTransform:'uppercase',color:TOKENS.ink3,marginBottom:6}}>{k}</div>
+      <div style={{fontFamily:SERIF,fontSize:26,fontWeight:500,color:accent||TOKENS.ink,lineHeight:1,letterSpacing:'-0.01em'}}>{v}</div>
+      {sub && <div style={{fontFamily:SANS,fontSize:11,color:TOKENS.ink3,marginTop:4}}>{sub}</div>}
+    </div>
+  );
+}
+
+function Divider({ style={} }) {
+  return <div style={{height:1,background:TOKENS.hair,width:'100%',...style}}/>;
+}
+
+function Section({ title, kicker, action, children, style={} }) {
+  return (
+    <section style={{...style}}>
+      {(title||kicker||action) && (
+        <header style={{display:'flex',alignItems:'baseline',justifyContent:'space-between',marginBottom:16}}>
+          <div>
+            {kicker && <div style={{fontFamily:MONO,fontSize:10,letterSpacing:'0.12em',textTransform:'uppercase',color:TOKENS.ink3,marginBottom:4}}>{kicker}</div>}
+            {title && <h2 style={{fontFamily:SERIF,fontSize:24,fontWeight:500,color:TOKENS.ink,margin:0,letterSpacing:'-0.01em'}}>{title}</h2>}
+          </div>
+          {action}
+        </header>
+      )}
+      {children}
+    </section>
+  );
+}
+
+function Field({ label, hint, children, required }) {
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:6}}>
+      <label style={{fontFamily:SANS,fontSize:12,fontWeight:500,color:TOKENS.ink2}}>
+        {label} {required && <span style={{color:TOKENS.warn}}>*</span>}
+      </label>
+      {children}
+      {hint && <div style={{fontFamily:SANS,fontSize:11,color:TOKENS.ink3,lineHeight:1.4}}>{hint}</div>}
+    </div>
+  );
+}
+
+function TextArea({ value, onChange, placeholder, rows=4 }) {
+  return (
+    <textarea value={value||''} onChange={(e)=>onChange?.(e.target.value)} placeholder={placeholder} rows={rows} style={{
+      padding:12,borderRadius:8,border:`0.5px solid ${TOKENS.hair}`,background:TOKENS.surface,
+      fontFamily:SERIF,fontSize:14,color:TOKENS.ink,resize:'vertical',outline:0,lineHeight:1.5,
+    }}/>
+  );
+}
+
+function UploadTile({ title, sub, optional, accent }) {
+  const [h,setH] = React.useState(false);
+  return (
+    <button style={{
+      display:'flex',flexDirection:'column',alignItems:'flex-start',gap:4,
+      padding:18,borderRadius:10,width:'100%',textAlign:'left',
+      border:`0.5px dashed ${h?TOKENS.ink2:TOKENS.ink4}`,background:TOKENS.surface,
+      cursor:'pointer',transition:'all 120ms',
+    }} onMouseEnter={()=>setH(true)} onMouseLeave={()=>setH(false)}>
+      <div style={{display:'flex',alignItems:'center',gap:8,width:'100%'}}>
+        <div style={{width:28,height:28,borderRadius:6,background:accent||'#efece4',display:'flex',alignItems:'center',justifyContent:'center',color:TOKENS.ink2}}>{Icon.plus()}</div>
+        <span style={{fontFamily:SANS,fontSize:13,fontWeight:500,color:TOKENS.ink}}>{title}</span>
+        {optional && <Pill tone="outline">Optional</Pill>}
+      </div>
+      <span style={{fontFamily:SANS,fontSize:11,color:TOKENS.ink3,lineHeight:1.4}}>{sub}</span>
+    </button>
+  );
+}
+
+function StepIndicator({ steps, current }) {
+  return (
+    <div style={{display:'flex',alignItems:'center',gap:0,marginBottom:32,flexWrap:'wrap',gap:8}}>
+      {steps.map((s,i) => {
+        const done=i<current, active=i===current;
+        return (
+          <React.Fragment key={i}>
+            <div style={{display:'flex',alignItems:'center',gap:8}}>
+              <div style={{width:24,height:24,borderRadius:999,
+                background:done?TOKENS.ink:(active?TOKENS.ink:TOKENS.surface),
+                border:`0.5px solid ${active||done?TOKENS.ink:TOKENS.hair}`,
+                color:done||active?TOKENS.surface:TOKENS.ink3,
+                fontFamily:SANS,fontSize:11,fontWeight:500,
+                display:'flex',alignItems:'center',justifyContent:'center',
+              }}>{done?Icon.check(12):i+1}</div>
+              <div style={{fontFamily:SANS,fontSize:12,fontWeight:active?500:400,color:active?TOKENS.ink:(done?TOKENS.ink2:TOKENS.ink3)}}>{s}</div>
+            </div>
+            {i<steps.length-1 && <div style={{flex:1,minWidth:16,height:1,background:TOKENS.hair}}/>}
+          </React.Fragment>
+        );
+      })}
+    </div>
+  );
+}
+
+function fmtMoney(n, currency='$') {
+  if (n>=1000000) return `${currency}${(n/1000000).toFixed(n%1000000===0?0:1)}M`;
+  if (n>=1000)    return `${currency}${(n/1000).toFixed(0)}k`;
+  return `${currency}${n}`;
+}
+
+// ─── Empty / Loading States ───
+function EmptyState({ icon, title, body, cta, onCta }) {
+  return (
+    <div style={{padding:'56px 24px',textAlign:'center',display:'flex',flexDirection:'column',alignItems:'center',gap:16}}>
+      <div style={{width:56,height:56,borderRadius:14,background:'#efece4',display:'flex',alignItems:'center',justifyContent:'center',color:TOKENS.ink3}}>{icon||Icon.spark(24)}</div>
+      <div>
+        <div style={{fontFamily:SERIF,fontSize:20,fontWeight:500,color:TOKENS.ink,marginBottom:6}}>{title}</div>
+        <div style={{fontFamily:SANS,fontSize:13,color:TOKENS.ink3,lineHeight:1.5,maxWidth:340,margin:'0 auto'}}>{body}</div>
+      </div>
+      {cta && <Btn variant="primary" onClick={onCta}>{cta}</Btn>}
+    </div>
+  );
+}
+
+function SkeletonCard() {
+  const pulse = {animation:'pulse 1.4s ease-in-out infinite',background:'linear-gradient(90deg,#efece4 25%,#f6f4ef 50%,#efece4 75%)',backgroundSize:'200% 100%'};
+  return (
+    <Card style={{overflow:'hidden'}}>
+      <div style={{height:160,...pulse,borderRadius:'14px 14px 0 0'}}/>
+      <div style={{padding:20,display:'flex',flexDirection:'column',gap:12}}>
+        <div style={{height:10,borderRadius:4,width:'60%',...pulse}}/>
+        <div style={{height:22,borderRadius:4,width:'80%',...pulse}}/>
+        <div style={{height:14,borderRadius:4,width:'90%',...pulse}}/>
+        <div style={{height:14,borderRadius:4,width:'70%',...pulse}}/>
+      </div>
+      <style>{`@keyframes pulse{0%{background-position:200% 0}100%{background-position:-200% 0}}`}</style>
+    </Card>
+  );
+}
+
+// ─── Trust Badge Panel ───
+function TrustBadgeRow({ badges }) {
+  if (!badges || !badges.length) return null;
+  const iconForBadge = (b) => {
+    if (b.includes('KYC') || b.includes('verified')) return Icon.shield(12);
+    if (b.includes('revenue') || b.includes('Revenue')) return Icon.chart(12);
+    if (b.includes('Demo') || b.includes('demo')) return Icon.play(12);
+    if (b.includes('Closing')) return Icon.clock(12);
+    if (b.includes('Live')) return Icon.globe(12);
+    return Icon.check(12);
+  };
+  return (
+    <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
+      {badges.map(b => (
+        <span key={b} style={{
+          display:'inline-flex',alignItems:'center',gap:5,
+          padding:'4px 10px',borderRadius:999,
+          background:TOKENS.raiseBg,color:TOKENS.raise,
+          fontFamily:SANS,fontSize:11,fontWeight:500,
+          border:`0.5px solid rgba(31,93,58,0.2)`,
+        }}>
+          <span style={{display:'inline-flex'}}>{iconForBadge(b)}</span>{b}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+// ─── Milestone Timeline ───
+function MilestoneTimeline({ milestones, vertical=false }) {
+  if (vertical) {
+    return (
+      <div style={{display:'flex',flexDirection:'column',gap:0}}>
+        {milestones.map((m,i) => (
+          <div key={i} style={{display:'flex',gap:16,paddingBottom: i<milestones.length-1?20:0}}>
+            <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:0}}>
+              <div style={{
+                width:22,height:22,borderRadius:999,flexShrink:0,
+                display:'flex',alignItems:'center',justifyContent:'center',
+                background:m.done?TOKENS.raise:(m.current?TOKENS.ink:TOKENS.surface),
+                border:`0.5px solid ${m.done||m.current?TOKENS.ink:TOKENS.hair}`,
+                color:m.done||m.current?'#fbfaf6':TOKENS.ink4,
+              }}>{m.done?Icon.check(11):<span style={{fontFamily:MONO,fontSize:9}}>{i+1}</span>}</div>
+              {i<milestones.length-1 && <div style={{width:1,flex:1,minHeight:12,background:m.done?TOKENS.raise:TOKENS.hair,marginTop:3}}/>}
+            </div>
+            <div style={{paddingTop:2,paddingBottom:4}}>
+              <div style={{fontFamily:SANS,fontSize:13,fontWeight:500,color:m.current?TOKENS.ink:(m.done?TOKENS.ink2:TOKENS.ink3)}}>{m.label}</div>
+              {m.date && <div style={{fontFamily:MONO,fontSize:10,color:TOKENS.ink4,marginTop:2}}>{m.date}</div>}
+              {m.note && <div style={{fontFamily:SANS,fontSize:12,color:TOKENS.ink3,marginTop:3,lineHeight:1.4}}>{m.note}</div>}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  return (
+    <div style={{position:'relative',display:'flex',gap:0}}>
+      <div style={{position:'absolute',top:11,left:14,right:14,height:1,background:TOKENS.hair}}/>
+      {milestones.map((m,i) => (
+        <div key={i} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:8,position:'relative'}}>
+          <div style={{
+            width:22,height:22,borderRadius:999,zIndex:1,
+            display:'flex',alignItems:'center',justifyContent:'center',
+            background:m.done?TOKENS.raise:(m.current?TOKENS.ink:TOKENS.surface),
+            border:`0.5px solid ${m.done||m.current?TOKENS.ink:TOKENS.hair}`,
+            color:m.done||m.current?'#fbfaf6':TOKENS.ink4,
+          }}>{m.done?Icon.check(11):<span style={{fontFamily:MONO,fontSize:9}}>{i+1}</span>}</div>
+          <div style={{fontFamily:SANS,fontSize:11,color:m.current?TOKENS.ink:(m.done?TOKENS.ink2:TOKENS.ink3),textAlign:'center',lineHeight:1.3}}>{m.label}</div>
+          {m.date && <div style={{fontFamily:MONO,fontSize:9,color:TOKENS.ink4}}>{m.date}</div>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+
+// ═══════════════════════════════════════════════
+// 4. DATA
+// ═══════════════════════════════════════════════
+
+const IDEAS = [
+  { id:'aurora', name:'Aurora Loops', tagline:'Closed-loop fertilizer from urban food waste',
+    sector:'Climate', stage:'Raise', stageLabel:'Pre-seed · SAFE', geo:'Berlin, DE',
+    founder:{ name:'Imogen Vaal', role:'Co-founder, ex-soil scientist', initials:'IV', tone:'#3a4a3a' },
+    raise:{ target:800000, raised:412000, valuation:'€6M post', minTicket:250, investors:188, daysLeft:22, available:'US, EU' },
+    upvotes:2147, comments:312, watchers:921, coverTone:'#a8b89a',
+    metrics:[{k:'Pilot revenue',v:'€42k',sub:'last 90 days'},{k:'Composting partners',v:'7',sub:'across DE/NL'},{k:'Carbon offset',v:'180t',sub:'verified'}],
+    summary:'We collect food waste from restaurants, run it through a proprietary anaerobic digester, and sell the resulting fertilizer back to urban farms — at half the cost of imported alternatives.',
+    traction:'Closed €42k pilot revenue with two restaurant groups in Berlin. Letters of intent from 11 more. Soil-quality results published with TU Berlin.',
+    badges:['KYC verified','Demo available','Pilot revenue'],
+    askLine:'Raising €800k to deploy two more digesters and expand to Amsterdam.',
+  },
+  { id:'noma', name:'Noma', tagline:'Async voice notes for distributed engineering teams',
+    sector:'Productivity', stage:'Raise', stageLabel:'Seed · SAFE', geo:'Lisbon, PT',
+    founder:{ name:'Tomás Ferreira', role:'Founder, prev. staff eng', initials:'TF', tone:'#3d3a4d' },
+    raise:{ target:1500000, raised:1140000, valuation:'$12M post', minTicket:500, investors:412, daysLeft:8, available:'US' },
+    upvotes:4031, comments:588, watchers:1840, coverTone:'#b6b0c8',
+    metrics:[{k:'MRR',v:'$38k',sub:'+22% MoM'},{k:'Teams',v:'214',sub:'paid'},{k:'Retention',v:'94%',sub:'6mo logo'}],
+    summary:'Slack threads waste hours. Noma replaces standups, code reviews, and design crits with searchable, transcribed voice notes — threaded by repo and ticket.',
+    traction:'$38k MRR, 22% MoM growth, 94% six-month logo retention. GitHub and Linear integrations live.',
+    badges:['KYC verified','Live product','Revenue'],
+    askLine:'Raising $1.5M to grow GTM and ship the desktop app.',
+  },
+  { id:'tidewater', name:'Tidewater Health', tagline:'At-home blood biomarker tracking for endurance athletes',
+    sector:'Health', stage:'Raise', stageLabel:'Pre-seed · SAFE', geo:'Boulder, US',
+    founder:{ name:'Nadia Park', role:'MD, sports medicine', initials:'NP', tone:'#3d4a52' },
+    raise:{ target:600000, raised:198000, valuation:'$5M post', minTicket:250, investors:96, daysLeft:31, available:'US' },
+    upvotes:1582, comments:204, watchers:612, coverTone:'#9eb4be',
+    metrics:[{k:'Waitlist',v:'4,200',sub:'verified emails'},{k:'Pilot users',v:'180',sub:'paying $99/mo'},{k:'NPS',v:'71',sub:'pilot cohort'}],
+    summary:'A finger-prick lab kit and app that tracks 12 biomarkers that predict endurance performance — iron, ferritin, cortisol, hormones, inflammation.',
+    traction:'4,200 waitlist, 180 pilot users at $99/mo. CLIA-certified lab partner contracted. FDA Class I exempt.',
+    badges:['KYC verified','Demo available','Waitlist signal'],
+    askLine:'Raising $600k for inventory and a Boulder retail kiosk.',
+  },
+  { id:'glyph', name:'Glyph', tagline:'Open-source license compliance for AI training data',
+    sector:'AI Infra', stage:'Raise', stageLabel:'Seed · SAFE', geo:'San Francisco, US',
+    founder:{ name:'Hari Subramanian', role:'Founder, prev. policy at OpenAI', initials:'HS', tone:'#4a4030' },
+    raise:{ target:2000000, raised:1620000, valuation:'$18M post', minTicket:1000, investors:240, daysLeft:4, available:'US' },
+    upvotes:5240, comments:901, watchers:2410, coverTone:'#c8b89a',
+    metrics:[{k:'ARR',v:'$210k',sub:'committed'},{k:'Customers',v:'14',sub:'AI labs'},{k:'Datasets',v:'11M',sub:'scanned'}],
+    summary:'Train your LLM on data your lawyers approve. Glyph scans pretraining corpora, surfaces license violations, and produces audit-ready reports for regulators.',
+    traction:'$210k committed ARR across 14 AI labs. Working with two Frontier-class customers under NDA.',
+    badges:['KYC verified','Live product','Revenue','Closing soon'],
+    askLine:'Raising $2M to expand engineering and meet EU AI Act demand.',
+  },
+  { id:'mara', name:'Mara', tagline:'Mobile banking for cross-border African freelancers',
+    sector:'Fintech', stage:'Raise', stageLabel:'Pre-seed · SAFE', geo:'Nairobi, KE',
+    founder:{ name:'Adaeze Okonkwo', role:'Founder, ex-Flutterwave', initials:'AO', tone:'#4a3838' },
+    raise:{ target:750000, raised:290000, valuation:'$7M post', minTicket:250, investors:142, daysLeft:19, available:'US, KE' },
+    upvotes:2810, comments:419, watchers:1102, coverTone:'#c0a0a0',
+    metrics:[{k:'GMV',v:'$1.2M',sub:'monthly'},{k:'Active users',v:'8,400',sub:'+34% MoM'},{k:'Take rate',v:'1.4%',sub:'avg'}],
+    summary:'African freelancers lose 8–12% to FX and wire fees. Mara settles in stablecoin under the hood, pays out in local currency, and charges 1.4%.',
+    traction:'$1.2M monthly GMV, 8,400 active users, 34% MoM growth. Live in Kenya, Nigeria, Ghana.',
+    badges:['KYC verified','Live product','Revenue'],
+    askLine:'Raising $750k to add SADC corridor and launch debit card.',
+  },
+  { id:'concept-quill', name:'Quill', tagline:'A reading app that pays you to finish books',
+    sector:'Consumer', stage:'Concept', stageLabel:'Concept', geo:'Toronto, CA',
+    founder:{ name:'Jules Aronson', role:'Indie hacker', initials:'JA', tone:'#4a4438' },
+    upvotes:1820, comments:247, watchers:380, coverTone:'#bfb39a',
+    summary:'You stake $20 to start a book. Finish it within 30 days (verified by chapter quizzes) and get $25 back.',
+    askLine:'Looking for a technical cofounder and 3 paid pilot readers.',
+    badges:['Idea stage','Looking for cofounder'],
+  },
+  { id:'concept-relay', name:'Relay Civic', tagline:'Local newsletter cooperatives owned by readers',
+    sector:'Media', stage:'Concept', stageLabel:'Concept', geo:'Detroit, US',
+    founder:{ name:'Marcus Bell', role:'Former local journalist', initials:'MB', tone:'#3d4a4a' },
+    upvotes:942, comments:138, watchers:210, coverTone:'#9aafb8',
+    summary:'Local journalism is dying. What if every reader owned 1/1000th of their town\'s newsletter, voted on coverage, and split surpluses?',
+    askLine:'Looking for feedback on legal structure and 2 pilot cities.',
+    badges:['Idea stage','Seeking feedback'],
+  },
+  { id:'concept-orbit', name:'Orbit Tools', tagline:'Shared studio equipment for indie creators, by zip code',
+    sector:'Marketplace', stage:'Concept', stageLabel:'Concept', geo:'Brooklyn, US',
+    founder:{ name:'Sasha Kim', role:'Photographer', initials:'SK', tone:'#4a3d4a' },
+    upvotes:1240, comments:178, watchers:290, coverTone:'#b8a8c0',
+    summary:'Every indie creator owns a $4k camera that sits idle 95% of the time. Orbit lets neighbors share gear by zip code, with deposits and insurance built in.',
+    askLine:'Validating demand. Looking for a Brooklyn pilot.',
+    badges:['Idea stage','Validating'],
+  },
+];
+
+const COMMENTS_BY_IDEA = {
+  glyph: [
+    { user:'Priya R.', role:'Investor · 18 deals', when:'2h', vote:142, body:'The EU AI Act timing is excellent. My one concern: large labs will build this internally. What\'s the moat in 18 months?' },
+    { user:'Hari S.', role:'Founder', when:'1h', vote:38, body:'Fair question — (1) canonical license database hard to replicate, (2) becoming the audit standard regulators reference, (3) labs hate building compliance internally.', isFounder:true },
+    { user:'Devon T.', role:'Tester · used demo', when:'4h', vote:91, body:'Ran our internal corpus through the demo. Caught 14 license issues our legal team had missed. Sold.' },
+    { user:'M. Larsson', role:'Investor', when:'6h', vote:24, body:'What\'s the customer concentration risk? Two Frontier labs sounds like 80% of revenue.' },
+  ],
+  noma: [
+    { user:'Eva K.', role:'Engineering manager', when:'3h', vote:88, body:'We replaced standups with Noma three months ago. Got 5 hours per week per eng back. Real product.' },
+    { user:'Tomás F.', role:'Founder', when:'2h', vote:22, body:'Thanks Eva! Your team\'s feedback on the Linear integration shaped half of v2.', isFounder:true },
+  ],
+  aurora: [
+    { user:'Lina W.', role:'Climate investor', when:'5h', vote:64, body:'Unit economics are the question for me. What\'s payback per digester?' },
+    { user:'Imogen V.', role:'Founder', when:'4h', vote:18, body:'Each digester pays back in 14 months at current pricing. Happy to share the model — DM.', isFounder:true },
+  ],
+};
+
+const VALIDATIONS = {
+  glyph: [
+    { user:'Devon T.', role:'Tester', when:'4h', rating:5, worked:'License detection caught everything I threw at it. UI is clean.', didnt:'Took 40 min to scan a 50GB corpus — needs async progress UX.', verdict:'Would switch from manual review today.' },
+    { user:'AI researcher', role:'Tester · anonymous', when:'1d', rating:4, worked:'Audit report format is exactly what regulators want.', didnt:'No GDPR data-provenance support yet.', verdict:'Solid MVP. Moat is the database not the scanner.' },
+  ],
+  noma: [
+    { user:'Eva K.', role:'Eng manager', when:'3h', rating:5, worked:'Async format completely replaced our 9am standup.', didnt:'No desktop app — browser only is fine for us but some resist.', verdict:'Keeping it regardless of investment outcome.' },
+  ],
+};
+
+const NOTIFICATIONS = [
+  { id:1, type:'raise',   unread:true,  when:'2m',  ideaId:'noma',      body:'Noma is now 80% funded — 8 days remaining.', icon:'chart' },
+  { id:2, type:'comment', unread:true,  when:'14m', ideaId:'glyph',     body:'Devon T. replied to your comment on Glyph.', icon:'comment' },
+  { id:3, type:'closing', unread:true,  when:'1h',  ideaId:'glyph',     body:'Glyph closes in 4 days — review your commitment.', icon:'clock' },
+  { id:4, type:'system',  unread:false, when:'2h',  ideaId:null,        body:'Your KYC verification was approved.', icon:'shield' },
+  { id:5, type:'follow',  unread:false, when:'3h',  ideaId:'aurora',    body:'Aurora Loops posted a founder update.', icon:'bell' },
+  { id:6, type:'raise',   unread:false, when:'1d',  ideaId:'tidewater', body:'Tidewater Health reached 33% of their raise target.', icon:'chart' },
+  { id:7, type:'comment', unread:false, when:'1d',  ideaId:'noma',      body:'Tomás F. (Founder) replied to your question on Noma.', icon:'comment' },
+  { id:8, type:'system',  unread:false, when:'2d',  ideaId:null,        body:'Annual investment cap updated: $11,200 available.', icon:'settings' },
+];
+
+const FOUNDER_PROFILES = {
+  'hari-subramanian': {
+    name:'Hari Subramanian', initials:'HS', tone:'#4a4030',
+    role:'Founder at Glyph', location:'San Francisco, US',
+    bio:'Former policy lead at OpenAI, focused on AI governance and training data compliance. Stanford CS + Law. Building Glyph to solve the open-source license crisis before regulators force the issue.',
+    joined:'Jan 2025', followers:1840, following:42,
+    socialX:'@hsubram', socialLinkedIn:'in/hsubramanian',
+    ideaIds:['glyph'],
+    stats:{ ideas:1, raised:'$1.62M', investors:240, avgFunding:'81%' },
+  },
+  'imogen-vaal': {
+    name:'Imogen Vaal', initials:'IV', tone:'#3a4a3a',
+    role:'Co-founder at Aurora Loops', location:'Berlin, DE',
+    bio:'Soil scientist turned entrepreneur. 8 years in anaerobic digestion research at TU Berlin before founding Aurora. Passionate about closing the urban food waste loop at scale.',
+    joined:'Feb 2025', followers:921, following:38,
+    socialX:'@imogenvaal',
+    ideaIds:['aurora'],
+    stats:{ ideas:1, raised:'€412k', investors:188, avgFunding:'52%' },
+  },
+};
+
+const ADMIN_QUEUE = [
+  { id:'pending-1', name:'ClearPath', founder:'Lena Müller', type:'Raise', sector:'Climate', submitted:'Apr 24', signal:820, status:'pending', notes:'Deck incomplete — missing financials.' },
+  { id:'pending-2', name:'Rove', founder:'James Osei', type:'Raise', sector:'Marketplace', submitted:'Apr 23', signal:1240, status:'pending', notes:'' },
+  { id:'pending-3', name:'Moth Media', founder:'Sara Jin', type:'Concept', sector:'Media', submitted:'Apr 22', signal:340, status:'pending', notes:'' },
+  { id:'pending-4', name:'Fern Health', founder:'Priya Nair', type:'Raise', sector:'Health', submitted:'Apr 21', signal:2100, status:'pending', notes:'KYC passed. Strong traction proof.' },
+  { id:'live-1', name:'Glyph', founder:'Hari Subramanian', type:'Raise', sector:'AI Infra', submitted:'Mar 15', signal:5240, status:'live', notes:'' },
+  { id:'live-2', name:'Noma', founder:'Tomás Ferreira', type:'Raise', sector:'Productivity', submitted:'Mar 10', signal:4031, status:'live', notes:'' },
+  { id:'rejected-1', name:'CryptoFarm X', founder:'Anon', type:'Raise', sector:'Crypto', submitted:'Mar 8', signal:20, status:'rejected', notes:'Failed KYC. Suspected fake metrics.' },
+];
+
+const PORTFOLIO = [
+  { id:'noma',   name:'Noma',         invested:1000, current:1340, change:'+34.0%', stage:'Active',       date:'Mar 2026' },
+  { id:'glyph',  name:'Glyph',        invested:2500, current:2500, change:'0.0%',   stage:'Pending close',date:'Apr 2026' },
+  { id:'aurora', name:'Aurora Loops', invested:500,  current:500,  change:'0.0%',   stage:'Pending close',date:'Apr 2026' },
+  { id:'cipher', name:'Cipher Labs',  invested:750,  current:0,    change:'−100%',  stage:'Wound down',   date:'Aug 2024' },
+];
+
+
+// ═══════════════════════════════════════════════
+// 5. NAV (desktop sidebar + mobile bottom bar)
+// ═══════════════════════════════════════════════
+
+function Nav({ current, go, user }) {
+  const isMobile = useMediaQuery('(max-width: 767px)');
+  const [drawerOpen, setDrawerOpen] = React.useState(false);
+
+  const sections = [
+    { label:'Browse', items:[
+      { id:'home',      label:'Home',       icon:Icon.home() },
+      { id:'discover',  label:'Discover',   icon:Icon.spark() },
+      { id:'shortlist', label:'Shortlist',  icon:Icon.bookmark() },
+      { id:'compare',   label:'Compare',    icon:Icon.filter() },
+    ]},
+    { label:'Invest', items:[
+      { id:'portfolio',      label:'Portfolio',    icon:Icon.shield() },
+      { id:'notifications',  label:'Notifications',icon:Icon.bell() },
+    ]},
+    { label:'Build', items:[
+      { id:'founder-onboard',   label:'List an idea',       icon:Icon.plus() },
+      { id:'founder-dashboard', label:'Founder dashboard',  icon:Icon.doc() },
+    ]},
+    { label:'Account', items:[
+      { id:'profile-settings', label:'Profile & settings', icon:Icon.settings() },
+      { id:'strategy',         label:'Strategy memo',      icon:Icon.doc() },
+    ]},
+    { label:'Admin', items:[
+      { id:'admin', label:'Moderation', icon:Icon.flag() },
+    ]},
+  ];
+
+  const NavItem = ({ it, onClick }) => {
+    const active = current === it.id;
+    return (
+      <button onClick={()=>{ go(it.id); onClick?.(); }} style={{
+        display:'flex',alignItems:'center',gap:10,
+        width:'100%',padding:'8px 10px',borderRadius:7,
+        background:active?'#efece4':'transparent',
+        border:0,cursor:'pointer',
+        fontFamily:SANS,fontSize:13,fontWeight:active?500:400,
+        color:active?TOKENS.ink:TOKENS.ink2,
+        textAlign:'left',transition:'background 120ms',
+      }}
+        onMouseEnter={(e)=>{ if(!active) e.currentTarget.style.background=TOKENS.hair2; }}
+        onMouseLeave={(e)=>{ if(!active) e.currentTarget.style.background='transparent'; }}
+      >
+        <span style={{color:active?TOKENS.ink:TOKENS.ink3}}>{it.icon}</span>
+        {it.label}
+      </button>
+    );
+  };
+
+  const SidebarContent = ({ onClose }) => (
+    <>
+      <div style={{padding:'0 6px 18px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+        <Logo size={20}/>
+        {onClose && <button onClick={onClose} style={{border:0,background:'transparent',color:TOKENS.ink3,cursor:'pointer',padding:4,display:'flex'}}>{Icon.close(16)}</button>}
+      </div>
+      {sections.map(sec => (
+        <div key={sec.label}>
+          <div style={{fontFamily:MONO,fontSize:9,letterSpacing:'0.12em',textTransform:'uppercase',color:TOKENS.ink4,padding:'8px 10px 4px'}}>{sec.label}</div>
+          {sec.items.map(it => <NavItem key={it.id} it={it} onClick={onClose}/>)}
+        </div>
+      ))}
+      <div style={{flex:1}}/>
+      <div style={{padding:'12px 10px',borderTop:`0.5px solid ${TOKENS.hair}`,marginTop:12}}>
+        <div style={{display:'flex',alignItems:'center',gap:10}}>
+          <Avatar name={user.name} initials={user.initials} tone="#3a3830" size={28}/>
+          <div style={{minWidth:0}}>
+            <div style={{fontFamily:SANS,fontSize:12,fontWeight:500,color:TOKENS.ink,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{user.name}</div>
+            <div style={{fontFamily:SANS,fontSize:11,color:TOKENS.ink3}}>{user.role}</div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+
+  if (isMobile) {
+    const tabItems = [
+      { id:'home',          label:'Home',        icon:Icon.home },
+      { id:'discover',      label:'Discover',    icon:Icon.spark },
+      { id:'shortlist',     label:'Saved',        icon:Icon.bookmark },
+      { id:'portfolio',     label:'Portfolio',   icon:Icon.shield },
+      { id:'notifications', label:'Alerts',      icon:Icon.bell },
+    ];
+    return (
+      <>
+        {/* Mobile drawer overlay */}
+        {drawerOpen && (
+          <div onClick={()=>setDrawerOpen(false)} style={{position:'fixed',inset:0,zIndex:200,background:'rgba(20,18,12,0.4)',backdropFilter:'blur(4px)'}}>
+            <div onClick={(e)=>e.stopPropagation()} style={{
+              position:'fixed',left:0,top:0,bottom:0,width:260,
+              background:TOKENS.bg,padding:'20px 14px',
+              display:'flex',flexDirection:'column',gap:4,
+              borderRight:`0.5px solid ${TOKENS.hair}`,zIndex:201,
+              overflowY:'auto',
+            }}>
+              <SidebarContent onClose={()=>setDrawerOpen(false)}/>
+            </div>
+          </div>
+        )}
+        {/* Bottom tab bar */}
+        <nav style={{
+          position:'fixed',bottom:0,left:0,right:0,zIndex:100,
+          background:TOKENS.surface,borderTop:`0.5px solid ${TOKENS.hair}`,
+          display:'flex',padding:'8px 0 max(8px,env(safe-area-inset-bottom))',
+          backdropFilter:'blur(12px)',
+        }}>
+          {tabItems.map(it => {
+            const active = current===it.id;
+            return (
+              <button key={it.id} onClick={()=>go(it.id)} style={{
+                flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:3,
+                border:0,background:'transparent',cursor:'pointer',padding:'2px 0',
+                color:active?TOKENS.ink:TOKENS.ink4,transition:'color 120ms',
+              }}>
+                {it.icon(active?16:14)}
+                <span style={{fontFamily:SANS,fontSize:10,fontWeight:active?500:400}}>{it.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+      </>
+    );
+  }
+
+  return (
+    <aside style={{
+      width:232,flexShrink:0,background:TOKENS.bg,
+      borderRight:`0.5px solid ${TOKENS.hair}`,
+      padding:'20px 14px',
+      display:'flex',flexDirection:'column',gap:4,
+      height:'100vh',position:'sticky',top:0,overflowY:'auto',
+    }}>
+      <SidebarContent/>
+    </aside>
+  );
+}
+
+function TopBar({ title, kicker, onSearch, search, right, go }) {
+  const isMobile = useMediaQuery('(max-width: 767px)');
+  const [showSearch, setShowSearch] = React.useState(false);
+  return (
+    <header style={{
+      display:'flex',alignItems:'center',gap:16,
+      padding: isMobile ? '12px 16px' : '20px 36px',
+      borderBottom:`0.5px solid ${TOKENS.hair}`,
+      background:TOKENS.surface,position:'sticky',top:0,zIndex:10,
+      backdropFilter:'saturate(160%) blur(8px)',
+    }}>
+      {isMobile && (
+        <button onClick={()=>document.dispatchEvent(new CustomEvent('openDrawer'))} style={{border:0,background:'transparent',color:TOKENS.ink2,cursor:'pointer',display:'flex',padding:4}}>
+          {Icon.menu(18)}
+        </button>
+      )}
+      <div style={{minWidth:0,flexShrink:1,overflow:'hidden',flex:isMobile?1:'initial'}}>
+        {!isMobile && kicker && <div style={{fontFamily:MONO,fontSize:10,letterSpacing:'0.12em',textTransform:'uppercase',color:TOKENS.ink3,marginBottom:4,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{kicker}</div>}
+        <div style={{fontFamily:SERIF,fontSize:isMobile?18:22,fontWeight:500,color:TOKENS.ink,letterSpacing:'-0.01em',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{title}</div>
+      </div>
+      {!isMobile && <div style={{flex:1}}/>}
+      {onSearch && !isMobile && (
+        <Input value={search} onChange={onSearch} placeholder="Search ideas, founders, sectors…" icon={Icon.search()} style={{width:340}}/>
+      )}
+      {!isMobile && right}
+      {isMobile && onSearch && (
+        <button onClick={()=>setShowSearch(s=>!s)} style={{border:0,background:'transparent',color:TOKENS.ink2,cursor:'pointer',display:'flex',padding:4}}>{Icon.search(18)}</button>
+      )}
+    </header>
+  );
+}
+
+
+// ═══════════════════════════════════════════════
+// 6. HOMEPAGE
+// ═══════════════════════════════════════════════
+
+function Homepage({ go }) {
+  const isMobile = useMediaQuery('(max-width: 767px)');
+  const sectors = ['All','Climate','AI Infra','Fintech','Health','Productivity','Consumer','Marketplace','Media'];
+  const [activeSector, setActiveSector] = React.useState('All');
+
+  const raises = IDEAS.filter(i => i.stage === 'Raise');
+  const featured = raises.filter(i => i.id === 'glyph' || i.id === 'noma' || i.id === 'mara');
+
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:isMobile?32:56}}>
+
+      {/* Hero */}
+      <div style={{
+        background:'linear-gradient(160deg,#ece8de 0%,#f6f4ef 60%)',
+        border:`0.5px solid ${TOKENS.hair}`,borderRadius:20,
+        padding: isMobile ? '36px 24px' : '64px 56px',
+        position:'relative',overflow:'hidden',
+      }}>
+        <div style={{position:'absolute',top:0,right:0,width:'40%',height:'100%',background:'radial-gradient(ellipse at 80% 50%,rgba(31,93,58,0.06) 0%,transparent 70%)'}}/>
+        <Pill tone="raise" dot style={{marginBottom:20}}>Open to all investors · No accreditation required</Pill>
+        <h1 style={{fontFamily:SERIF,fontSize:isMobile?36:58,fontWeight:500,color:TOKENS.ink,margin:'0 0 18px',letterSpacing:'-0.025em',lineHeight:1.05,maxWidth:700}}>
+          Back founders you believe in.
+        </h1>
+        <p style={{fontFamily:SERIF,fontSize:isMobile?16:22,color:TOKENS.ink2,margin:'0 0 32px',lineHeight:1.45,maxWidth:560}}>
+          Backable is where startups raise from their community. Browse real traction, read the deck, talk to the founder — then invest from $250.
+        </p>
+        <div style={{display:'flex',gap:12,flexWrap:'wrap',marginBottom:40}}>
+          <Btn variant="raise" size="lg" onClick={()=>go('discover')}>Browse open raises {Icon.arrow(14)}</Btn>
+          <Btn variant="ghost" size="lg" onClick={()=>go('founder-onboard')}>List your idea {Icon.plus(14)}</Btn>
+        </div>
+        <div style={{display:'flex',gap:isMobile?24:48,flexWrap:'wrap'}}>
+          {[['$4.2M','raised to date'],['8 raises','currently open'],['2,100+','community investors'],['94%','avg founder response rate']].map(([v,k])=>(
+            <div key={k}>
+              <div style={{fontFamily:SERIF,fontSize:isMobile?22:30,fontWeight:500,color:TOKENS.ink,letterSpacing:'-0.01em'}}>{v}</div>
+              <div style={{fontFamily:SANS,fontSize:12,color:TOKENS.ink3,marginTop:3}}>{k}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Featured raises */}
+      <Section title="Featured raises" kicker="Editor's picks · this week" action={<Btn variant="ghost" size="sm" onClick={()=>go('discover')}>View all {Icon.arrow(11)}</Btn>}>
+        <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'repeat(3,1fr)',gap:18}}>
+          {featured.map(idea => {
+            const pct = (idea.raise.raised/idea.raise.target)*100;
+            const cur = idea.geo.includes('DE')?'€':'$';
+            return (
+              <Card key={idea.id} hoverable onClick={()=>go('idea/'+idea.id)} style={{overflow:'hidden'}}>
+                <CoverArt tone={idea.coverTone} height={140} label={`${idea.sector} · ${idea.geo}`} style={{borderRadius:'14px 14px 0 0'}}/>
+                <div style={{padding:'18px 20px 20px'}}>
+                  <div style={{display:'flex',gap:6,marginBottom:10,flexWrap:'wrap'}}>
+                    {idea.raise.daysLeft<=7 ? <Pill tone="closing" dot>Closing in {idea.raise.daysLeft}d</Pill> : <Pill tone="raise" dot>Open raise</Pill>}
+                    <Pill tone="outline">{idea.sector}</Pill>
+                  </div>
+                  <h3 style={{fontFamily:SERIF,fontSize:20,fontWeight:500,color:TOKENS.ink,margin:'0 0 4px',letterSpacing:'-0.01em'}}>{idea.name}</h3>
+                  <p style={{fontFamily:SANS,fontSize:13,color:TOKENS.ink3,margin:'0 0 14px',lineHeight:1.4}}>{idea.tagline}</p>
+                  <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:14}}>
+                    {idea.metrics.slice(0,3).map((m,i)=>(
+                      <div key={i}>
+                        <div style={{fontFamily:SERIF,fontSize:16,fontWeight:500,color:TOKENS.ink}}>{m.v}</div>
+                        <div style={{fontFamily:SANS,fontSize:10,color:TOKENS.ink3,marginTop:2,lineHeight:1.3}}>{m.k}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{marginBottom:12}}>
+                    <div style={{display:'flex',justifyContent:'space-between',fontFamily:SANS,fontSize:11,color:TOKENS.ink3,marginBottom:4}}>
+                      <span style={{color:TOKENS.raise,fontWeight:600}}>{fmtMoney(idea.raise.raised,cur)} raised</span>
+                      <span>{Math.round(pct)}% of {fmtMoney(idea.raise.target,cur)}</span>
+                    </div>
+                    <Progress pct={pct} height={3}/>
+                  </div>
+                  <TrustBadgeRow badges={idea.badges}/>
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+      </Section>
+
+      {/* How it works */}
+      <div>
+        <div style={{textAlign:'center',marginBottom:32}}>
+          <div style={{fontFamily:MONO,fontSize:10,letterSpacing:'0.12em',textTransform:'uppercase',color:TOKENS.ink3,marginBottom:8}}>How it works</div>
+          <h2 style={{fontFamily:SERIF,fontSize:isMobile?28:36,fontWeight:500,color:TOKENS.ink,letterSpacing:'-0.015em'}}>Investing made simple</h2>
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'repeat(3,1fr)',gap:isMobile?16:24}}>
+          {[
+            { n:'01', title:'Browse verified raises', body:'Every founder is KYC-verified. Traction metrics are independently confirmed. Read the deck, watch the video, test the product.' },
+            { n:'02', title:'Commit from $250', body:'Invest via SAFE instrument through our FINRA-registered broker-dealer. Funds are escrowed and only released when the raise closes.' },
+            { n:'03', title:'Track your portfolio', body:'Follow your investments, get founder updates, and compare holdings. Annual investment caps tracked automatically per Reg CF.' },
+          ].map((s,i) => (
+            <Card key={i} style={{padding: isMobile?20:28}}>
+              <div style={{fontFamily:MONO,fontSize:12,color:TOKENS.ink4,marginBottom:14,letterSpacing:'0.08em'}}>{s.n}</div>
+              <h3 style={{fontFamily:SERIF,fontSize:20,fontWeight:500,color:TOKENS.ink,margin:'0 0 10px',letterSpacing:'-0.01em'}}>{s.title}</h3>
+              <p style={{fontFamily:SANS,fontSize:13,color:TOKENS.ink3,lineHeight:1.55,margin:0}}>{s.body}</p>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      {/* Browse by sector */}
+      <Section title="Browse by sector" kicker="All categories">
+        <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:24}}>
+          {sectors.map(s => (
+            <button key={s} onClick={()=>{ setActiveSector(s); go('discover'); }} style={{
+              padding:'8px 16px',borderRadius:999,
+              border:`0.5px solid ${activeSector===s?TOKENS.ink:TOKENS.hair}`,
+              background:activeSector===s?TOKENS.ink:'transparent',
+              color:activeSector===s?'#fbfaf6':TOKENS.ink2,
+              fontFamily:SANS,fontSize:13,fontWeight:500,cursor:'pointer',
+              transition:'all 120ms',
+            }}>{s}</button>
+          ))}
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr 1fr':'repeat(4,1fr)',gap:12}}>
+          {IDEAS.filter(i=>i.stage==='Raise').slice(0,4).map(idea=>(
+            <Card key={idea.id} hoverable onClick={()=>go('idea/'+idea.id)} style={{padding:16}}>
+              <CoverArt tone={idea.coverTone} height={70} style={{marginBottom:12}}/>
+              <div style={{fontFamily:SERIF,fontSize:15,fontWeight:500,color:TOKENS.ink,letterSpacing:'-0.01em'}}>{idea.name}</div>
+              <div style={{fontFamily:SANS,fontSize:11,color:TOKENS.ink3,marginTop:2,lineHeight:1.35}}>{idea.tagline}</div>
+              <div style={{display:'flex',alignItems:'center',gap:6,marginTop:10}}>
+                <Pill tone="raise" dot style={{fontSize:10}}>Open</Pill>
+                <span style={{fontFamily:MONO,fontSize:10,color:TOKENS.ink4}}>{idea.raise?.daysLeft}d left</span>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </Section>
+
+      {/* Trust section */}
+      <div style={{background:'linear-gradient(180deg,#ece8de 0%,#f6f4ef 100%)',border:`0.5px solid ${TOKENS.hair}`,borderRadius:20,padding:isMobile?'32px 24px':'48px 56px'}}>
+        <div style={{fontFamily:MONO,fontSize:10,letterSpacing:'0.12em',textTransform:'uppercase',color:TOKENS.ink3,marginBottom:12}}>Why Backable</div>
+        <h2 style={{fontFamily:SERIF,fontSize:isMobile?24:32,fontWeight:500,color:TOKENS.ink,margin:'0 0 32px',letterSpacing:'-0.015em'}}>Built on trust, backed by law</h2>
+        <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'repeat(3,1fr)',gap:24}}>
+          {[
+            { icon:Icon.shield(20), title:'KYC every founder', body:'Identity verification via Persona. Bad-actor check. Editorial review before any raise goes live.' },
+            { icon:Icon.check(20),  title:'Funds escrowed', body:'All commitments held by North Capital (FINRA-registered) until the raise closes. Refundable 48h before close.' },
+            { icon:Icon.globe(20),  title:'Reg CF compliant', body:'Non-accredited investors welcome. Annual investment caps tracked. Form C filed with SEC on your behalf.' },
+          ].map((f,i) => (
+            <div key={i} style={{display:'flex',gap:16}}>
+              <div style={{width:40,height:40,borderRadius:10,background:TOKENS.raiseBg,display:'flex',alignItems:'center',justifyContent:'center',color:TOKENS.raise,flexShrink:0}}>{f.icon}</div>
+              <div>
+                <div style={{fontFamily:SANS,fontSize:14,fontWeight:500,color:TOKENS.ink,marginBottom:6}}>{f.title}</div>
+                <div style={{fontFamily:SANS,fontSize:13,color:TOKENS.ink3,lineHeight:1.5}}>{f.body}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Founder CTA */}
+      <Card style={{padding:isMobile?'28px 24px':'40px 48px',display:'flex',flexDirection:isMobile?'column':'row',alignItems:isMobile?'flex-start':'center',gap:24,background:'linear-gradient(135deg,#15140f 0%,#3a3830 100%)'}}>
+        <div style={{flex:1}}>
+          <Pill tone="neutral" style={{marginBottom:14,background:'rgba(255,255,255,0.12)',color:'rgba(255,255,255,0.7)'}}>For founders</Pill>
+          <h2 style={{fontFamily:SERIF,fontSize:isMobile?24:32,fontWeight:500,color:'#fbfaf6',margin:'0 0 10px',letterSpacing:'-0.015em'}}>Ready to raise from your community?</h2>
+          <p style={{fontFamily:SANS,fontSize:14,color:'rgba(255,255,255,0.6)',margin:0,lineHeight:1.5}}>5 free listings. No upfront fees. AI-generated deck and pitch video included. Raise via SAFE in under a week.</p>
+        </div>
+        <div style={{display:'flex',gap:12,flexWrap:'wrap',flexShrink:0}}>
+          <Btn variant="quiet" size="lg" onClick={()=>go('founder-onboard')} style={{background:'#fbfaf6',color:TOKENS.ink}}>List your idea free</Btn>
+          <Btn variant="ghost" size="lg" onClick={()=>go('strategy')} style={{color:'rgba(255,255,255,0.7)',border:'0.5px solid rgba(255,255,255,0.2)'}}>Read strategy memo</Btn>
+        </div>
+      </Card>
+
+    </div>
+  );
+}
+
+
+// ═══════════════════════════════════════════════
+// 7. DISCOVER
+// ═══════════════════════════════════════════════
+
+function VoteButton({ count, onClick, active, vertical }) {
+  return (
+    <button onClick={(e)=>{e.stopPropagation();onClick?.();}} style={{
+      display:'inline-flex',flexDirection:vertical?'column':'row',
+      alignItems:'center',gap:vertical?2:6,
+      padding:vertical?'6px 8px':'5px 10px',borderRadius:8,
+      border:`0.5px solid ${active?TOKENS.raise:TOKENS.hair}`,
+      background:active?TOKENS.raiseBg:TOKENS.surface,
+      color:active?TOKENS.raise:TOKENS.ink2,cursor:'pointer',
+      fontFamily:SANS,fontSize:12,fontWeight:500,transition:'all 120ms',
+    }}>
+      {active?Icon.upFilled(13):Icon.up(13)}
+      <span style={{fontVariantNumeric:'tabular-nums'}}>{count.toLocaleString()}</span>
+    </button>
+  );
+}
+
+function StageBadge({ idea }) {
+  if (idea.stage==='Concept') return <Pill tone="concept" dot>Concept</Pill>;
+  if (idea.raise?.daysLeft<=5) return <Pill tone="closing" dot>Closing in {idea.raise.daysLeft}d</Pill>;
+  return <Pill tone="raise" dot>Open raise</Pill>;
+}
+
+function RaiseProgress({ idea, compact }) {
+  if (idea.stage!=='Raise') return null;
+  const pct=(idea.raise.raised/idea.raise.target)*100;
+  const cur=idea.geo.includes('DE')?'€':'$';
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:compact?4:6}}>
+      <div style={{display:'flex',justifyContent:'space-between',fontFamily:SANS,fontSize:11,color:TOKENS.ink3}}>
+        <span style={{color:TOKENS.raise,fontWeight:600,fontVariantNumeric:'tabular-nums'}}>{fmtMoney(idea.raise.raised,cur)} raised</span>
+        <span style={{fontVariantNumeric:'tabular-nums'}}>of {fmtMoney(idea.raise.target,cur)} · {idea.raise.investors} investors</span>
+      </div>
+      <Progress pct={pct} height={3}/>
+    </div>
+  );
+}
+
+function EditorialCard({ idea, onOpen, onVote, voted, onShortlist, shortlisted }) {
+  return (
+    <Card hoverable onClick={onOpen} style={{overflow:'hidden'}}>
+      <CoverArt tone={idea.coverTone} label={`${idea.sector} · ${idea.geo}`} height={190} style={{borderRadius:'14px 14px 0 0'}}/>
+      <div style={{padding:'20px 22px 22px'}}>
+        <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10,flexWrap:'wrap'}}>
+          <StageBadge idea={idea}/>
+          {idea.stage==='Raise' && <Pill tone="outline">{idea.stageLabel}</Pill>}
+          <Pill tone="outline">{idea.sector}</Pill>
+        </div>
+        <h3 style={{fontFamily:SERIF,fontSize:22,fontWeight:500,color:TOKENS.ink,margin:'0 0 4px',letterSpacing:'-0.01em'}}>{idea.name}</h3>
+        <p style={{fontFamily:SERIF,fontSize:15,color:TOKENS.ink2,margin:'0 0 14px',lineHeight:1.45}}>{idea.tagline}</p>
+        <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:idea.stage==='Raise'?16:0}}>
+          <Avatar name={idea.founder.name} initials={idea.founder.initials} tone={idea.founder.tone} size={26}/>
+          <div style={{fontFamily:SANS,fontSize:12,color:TOKENS.ink2}}>
+            <span style={{fontWeight:500}}>{idea.founder.name}</span>
+            <span style={{color:TOKENS.ink3}}> · {idea.founder.role}</span>
+          </div>
+        </div>
+        <RaiseProgress idea={idea}/>
+        {idea.badges && idea.badges.length>0 && <div style={{marginTop:12}}><TrustBadgeRow badges={idea.badges.slice(0,3)}/></div>}
+        <div style={{display:'flex',alignItems:'center',gap:8,marginTop:16,paddingTop:16,borderTop:`0.5px solid ${TOKENS.hair}`}}>
+          <VoteButton count={idea.upvotes} onClick={onVote} active={voted}/>
+          <button onClick={(e)=>e.stopPropagation()} style={{display:'inline-flex',alignItems:'center',gap:6,padding:'5px 10px',borderRadius:8,border:`0.5px solid ${TOKENS.hair}`,background:TOKENS.surface,color:TOKENS.ink2,cursor:'pointer',fontFamily:SANS,fontSize:12}}>
+            {Icon.comment(13)} {idea.comments}
+          </button>
+          <button onClick={(e)=>{e.stopPropagation();onShortlist?.();}} style={{display:'inline-flex',alignItems:'center',gap:6,padding:'5px 10px',borderRadius:8,border:`0.5px solid ${TOKENS.hair}`,background:TOKENS.surface,color:shortlisted?TOKENS.ink:TOKENS.ink2,cursor:'pointer',fontFamily:SANS,fontSize:12}}>
+            {shortlisted?Icon.bookmarkFilled(13):Icon.bookmark(13)}
+          </button>
+          <div style={{flex:1}}/>
+          {idea.stage==='Raise'
+            ? <Btn variant="raise" size="sm">Invest from {fmtMoney(idea.raise.minTicket,idea.geo.includes('DE')?'€':'$')}</Btn>
+            : <Btn variant="ghost" size="sm">View concept {Icon.arrow(12)}</Btn>
+          }
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function GridCard({ idea, onOpen, onVote, voted }) {
+  return (
+    <Card hoverable onClick={onOpen} style={{padding:16,display:'flex',flexDirection:'column',gap:12}}>
+      <CoverArt tone={idea.coverTone} height={100}/>
+      <div style={{display:'flex',alignItems:'center',gap:6,flexWrap:'wrap'}}>
+        <StageBadge idea={idea}/>
+        <Pill tone="outline">{idea.sector}</Pill>
+      </div>
+      <div>
+        <div style={{fontFamily:SERIF,fontSize:17,fontWeight:500,color:TOKENS.ink,letterSpacing:'-0.01em'}}>{idea.name}</div>
+        <div style={{fontFamily:SANS,fontSize:12,color:TOKENS.ink3,marginTop:2,lineHeight:1.4}}>{idea.tagline}</div>
+      </div>
+      <div style={{flex:1}}/>
+      <RaiseProgress idea={idea} compact/>
+      <div style={{display:'flex',alignItems:'center',gap:6}}>
+        <VoteButton count={idea.upvotes} onClick={onVote} active={voted}/>
+        <span style={{fontFamily:SANS,fontSize:11,color:TOKENS.ink3,display:'inline-flex',alignItems:'center',gap:4}}>{Icon.comment(11)} {idea.comments}</span>
+        <div style={{flex:1}}/>
+        <Avatar initials={idea.founder.initials} tone={idea.founder.tone} size={22}/>
+      </div>
+    </Card>
+  );
+}
+
+function FeedRow({ idea, onOpen, onVote, voted, rank }) {
+  const isMobile = useMediaQuery('(max-width: 767px)');
+  return (
+    <div onClick={onOpen} style={{display:'flex',gap:isMobile?12:16,padding:isMobile?'14px 16px':'16px 20px',borderBottom:`0.5px solid ${TOKENS.hair}`,cursor:'pointer',transition:'background 120ms'}}
+      onMouseEnter={(e)=>e.currentTarget.style.background=TOKENS.hair2}
+      onMouseLeave={(e)=>e.currentTarget.style.background='transparent'}>
+      {!isMobile && <div style={{width:24,fontFamily:MONO,fontSize:12,color:TOKENS.ink4,paddingTop:4}}>{String(rank).padStart(2,'0')}</div>}
+      <div onClick={(e)=>e.stopPropagation()}>
+        <VoteButton count={idea.upvotes} onClick={onVote} active={voted} vertical/>
+      </div>
+      {!isMobile && <CoverArt tone={idea.coverTone} height={68} style={{width:100,flexShrink:0}}/>}
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4,flexWrap:'wrap'}}>
+          <h3 style={{fontFamily:SERIF,fontSize:17,fontWeight:500,color:TOKENS.ink,margin:0,letterSpacing:'-0.01em'}}>{idea.name}</h3>
+          <StageBadge idea={idea}/>
+          <Pill tone="outline">{idea.sector}</Pill>
+        </div>
+        <div style={{fontFamily:SANS,fontSize:13,color:TOKENS.ink2,marginBottom:6,lineHeight:1.45}}>{idea.tagline}</div>
+        <div style={{display:'flex',alignItems:'center',gap:12,fontFamily:SANS,fontSize:11,color:TOKENS.ink3,flexWrap:'wrap'}}>
+          <span style={{display:'inline-flex',alignItems:'center',gap:4}}><Avatar initials={idea.founder.initials} tone={idea.founder.tone} size={16}/>{idea.founder.name}</span>
+          <span>{idea.geo}</span>
+          <span style={{display:'inline-flex',alignItems:'center',gap:4}}>{Icon.comment(11)} {idea.comments}</span>
+        </div>
+      </div>
+      {!isMobile && (
+        <div style={{width:200,flexShrink:0,display:'flex',flexDirection:'column',justifyContent:'center',gap:8}}>
+          {idea.stage==='Raise' ? (
+            <>
+              <RaiseProgress idea={idea} compact/>
+              <div style={{fontFamily:SANS,fontSize:11,color:TOKENS.ink3}}>{idea.raise.daysLeft}d left · min {fmtMoney(idea.raise.minTicket,idea.geo.includes('DE')?'€':'$')}</div>
+            </>
+          ) : (
+            <div style={{fontFamily:SANS,fontSize:11,color:TOKENS.ink3,lineHeight:1.4}}>{idea.askLine}</div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+const SECTORS = ['All','Climate','AI Infra','Fintech','Health','Productivity','Consumer','Marketplace','Media'];
+
+function FilterBar({ filter, setFilter, sort, setSort, search, setSearch, sectorFilter, setSectorFilter }) {
+  const isMobile = useMediaQuery('(max-width: 767px)');
+  const tabs = [{id:'all',label:'All'},{id:'Raise',label:'Open raises'},{id:'Concept',label:'Concepts'}];
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:12,marginBottom:24}}>
+      {/* Stage tabs + sort */}
+      <div style={{display:'flex',alignItems:'center',gap:12,flexWrap:'wrap'}}>
+        <div style={{display:'inline-flex',padding:3,background:'#efece4',borderRadius:8,border:`0.5px solid ${TOKENS.hair}`}}>
+          {tabs.map(t=>(
+            <button key={t.id} onClick={()=>setFilter(t.id)} style={{
+              padding:'6px 14px',fontFamily:SANS,fontSize:12,fontWeight:500,
+              border:0,borderRadius:6,cursor:'pointer',whiteSpace:'nowrap',
+              background:filter===t.id?TOKENS.card:'transparent',
+              color:filter===t.id?TOKENS.ink:TOKENS.ink2,
+              boxShadow:filter===t.id?'0 1px 2px rgba(20,18,12,0.06)':'none',
+            }}>{t.label}</button>
+          ))}
+        </div>
+        <div style={{flex:1}}/>
+        {!isMobile && (
+          <Input value={search} onChange={setSearch} placeholder="Search…" icon={Icon.search()} style={{width:240,height:34}}/>
+        )}
+        <select value={sort} onChange={(e)=>setSort(e.target.value)} style={{
+          appearance:'none',height:34,padding:'0 28px 0 12px',
+          background:TOKENS.surface,border:`0.5px solid ${TOKENS.hair}`,borderRadius:8,
+          fontFamily:SANS,fontSize:12,color:TOKENS.ink,cursor:'pointer',
+          backgroundImage:`url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 16 16' fill='none'><path d='M4 6l4 4 4-4' stroke='%236e6b60' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/></svg>")`,
+          backgroundRepeat:'no-repeat',backgroundPosition:'right 10px center',
+        }}>
+          <option value="trending">Trending</option>
+          <option value="new">Newest</option>
+          <option value="closing">Closing soon</option>
+          <option value="raised">Most raised</option>
+        </select>
+      </div>
+      {/* Sector chips */}
+      <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+        {SECTORS.map(s=>(
+          <button key={s} onClick={()=>setSectorFilter(s)} style={{
+            padding:'4px 12px',borderRadius:999,border:`0.5px solid ${sectorFilter===s?TOKENS.ink:TOKENS.hair}`,
+            background:sectorFilter===s?TOKENS.ink:'transparent',
+            color:sectorFilter===s?'#fbfaf6':TOKENS.ink3,
+            fontFamily:SANS,fontSize:11,fontWeight:500,cursor:'pointer',
+            transition:'all 120ms',whiteSpace:'nowrap',
+          }}>{s}</button>
+        ))}
+      </div>
+      {isMobile && (
+        <Input value={search} onChange={setSearch} placeholder="Search ideas…" icon={Icon.search()} style={{height:36}} full/>
+      )}
+    </div>
+  );
+}
+
+function Discover({ go, layout, voted, toggleVote, shortlisted, toggleShortlist }) {
+  const [filter, setFilter] = React.useState('all');
+  const [sort, setSort] = React.useState('trending');
+  const [search, setSearch] = React.useState('');
+  const [sectorFilter, setSectorFilter] = React.useState('All');
+  const isMobile = useMediaQuery('(max-width: 767px)');
+  const effectiveLayout = isMobile ? 'feed' : layout;
+
+  const ideas = React.useMemo(() => {
+    let list = IDEAS;
+    if (filter!=='all') list=list.filter(i=>i.stage===filter);
+    if (sectorFilter!=='All') list=list.filter(i=>i.sector===sectorFilter);
+    if (search) {
+      const q=search.toLowerCase();
+      list=list.filter(i=>i.name.toLowerCase().includes(q)||i.tagline.toLowerCase().includes(q)||i.sector.toLowerCase().includes(q));
+    }
+    list=[...list];
+    if (sort==='trending') list.sort((a,b)=>b.upvotes-a.upvotes);
+    if (sort==='new') list.reverse();
+    if (sort==='closing') list.sort((a,b)=>(a.raise?.daysLeft??999)-(b.raise?.daysLeft??999));
+    if (sort==='raised') list.sort((a,b)=>(b.raise?.raised??0)-(a.raise?.raised??0));
+    return list;
+  }, [filter, sort, search, sectorFilter]);
+
+  const featuredIdea = IDEAS.find(i=>i.id==='glyph');
+
+  return (
+    <div>
+      {effectiveLayout==='editorial' && filter!=='Concept' && !search && sectorFilter==='All' && (
+        <div style={{
+          marginBottom:32,padding:isMobile?'24px 20px':'36px',
+          background:'linear-gradient(180deg,#ece8de 0%,#f6f4ef 100%)',
+          border:`0.5px solid ${TOKENS.hair}`,borderRadius:16,
+          display:'grid',gridTemplateColumns:isMobile?'1fr':'1.2fr 1fr',gap:isMobile?24:36,alignItems:'center',
+        }}>
+          <div>
+            <Pill tone="closing" dot style={{marginBottom:14}}>Closing in {featuredIdea.raise.daysLeft}d</Pill>
+            <h1 style={{fontFamily:SERIF,fontSize:isMobile?30:38,fontWeight:500,color:TOKENS.ink,margin:'0 0 12px',letterSpacing:'-0.015em',lineHeight:1.1}}>{featuredIdea.name}</h1>
+            <p style={{fontFamily:SERIF,fontSize:isMobile?16:19,color:TOKENS.ink2,margin:'0 0 20px',lineHeight:1.4}}>{featuredIdea.tagline}. {featuredIdea.summary}</p>
+            <div style={{display:'flex',alignItems:'center',gap:isMobile?16:24,marginBottom:22,flexWrap:'wrap'}}>
+              {featuredIdea.metrics.slice(0,3).map((m,i)=><Stat key={i} {...m}/>)}
+            </div>
+            <div style={{display:'flex',alignItems:'center',gap:12,flexWrap:'wrap'}}>
+              <Btn variant="raise" onClick={()=>go('idea/'+featuredIdea.id)}>Read raise · {fmtMoney(featuredIdea.raise.target)}</Btn>
+              <Btn variant="ghost" onClick={()=>go('idea/'+featuredIdea.id)}>View deck {Icon.arrow(12)}</Btn>
+            </div>
+          </div>
+          {!isMobile && <CoverArt tone={featuredIdea.coverTone} height={280} label="Editor's pick · this week"/>}
+        </div>
+      )}
+
+      <FilterBar filter={filter} setFilter={setFilter} sort={sort} setSort={setSort} search={search} setSearch={setSearch} sectorFilter={sectorFilter} setSectorFilter={setSectorFilter}/>
+
+      {ideas.length===0 && (
+        <EmptyState icon={Icon.search(24)} title="No ideas found" body="Try clearing your filters or searching something else." cta="Clear filters" onCta={()=>{ setFilter('all'); setSearch(''); setSectorFilter('All'); }}/>
+      )}
+
+      {effectiveLayout==='editorial' && ideas.length>0 && (
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:22}}>
+          {ideas.map(i=>(
+            <EditorialCard key={i.id} idea={i} onOpen={()=>go('idea/'+i.id)} onVote={()=>toggleVote(i.id)} voted={voted[i.id]} onShortlist={()=>toggleShortlist(i.id)} shortlisted={shortlisted[i.id]}/>
+          ))}
+        </div>
+      )}
+
+      {effectiveLayout==='grid' && ideas.length>0 && (
+        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:18}}>
+          {ideas.map(i=>(
+            <GridCard key={i.id} idea={i} onOpen={()=>go('idea/'+i.id)} onVote={()=>toggleVote(i.id)} voted={voted[i.id]}/>
+          ))}
+        </div>
+      )}
+
+      {effectiveLayout==='feed' && ideas.length>0 && (
+        <Card style={{overflow:'hidden'}}>
+          {ideas.map((i,idx)=>(
+            <FeedRow key={i.id} idea={i} rank={idx+1} onOpen={()=>go('idea/'+i.id)} onVote={()=>toggleVote(i.id)} voted={voted[i.id]}/>
+          ))}
+        </Card>
+      )}
+    </div>
+  );
+}
+
+
+// ═══════════════════════════════════════════════
+// 8. IDEA DETAIL
+// ═══════════════════════════════════════════════
+
+function DeckSlide({ n, total, title, subtitle, accent }) {
+  return (
+    <div style={{width:'100%',aspectRatio:'16/10',background:TOKENS.card,border:`0.5px solid ${TOKENS.hair}`,borderRadius:8,padding:32,display:'flex',flexDirection:'column',position:'relative'}}>
+      <div style={{display:'flex',justifyContent:'space-between',fontFamily:MONO,fontSize:9,color:TOKENS.ink4,letterSpacing:'0.1em',textTransform:'uppercase'}}>
+        <span>{accent||'Slide'}</span><span>{n} / {total}</span>
+      </div>
+      <div style={{flex:1,display:'flex',flexDirection:'column',justifyContent:'center'}}>
+        {title && <div style={{fontFamily:SERIF,fontSize:28,fontWeight:500,color:TOKENS.ink,letterSpacing:'-0.01em',lineHeight:1.15}}>{title}</div>}
+        {subtitle && <div style={{fontFamily:SERIF,fontSize:16,color:TOKENS.ink2,marginTop:10,lineHeight:1.4}}>{subtitle}</div>}
+      </div>
+    </div>
+  );
+}
+
+function DeckViewer({ idea }) {
+  const [n,setN] = React.useState(0);
+  const slides = [
+    { title:idea.name, subtitle:idea.tagline, accent:'Cover' },
+    { title:'The problem', subtitle:idea.summary, accent:'Problem' },
+    { title:'Traction', subtitle:idea.traction, accent:'Why now' },
+    { title:'The ask', subtitle:idea.askLine, accent:'Raise' },
+  ];
+  const s = slides[n];
+  return (
+    <Card style={{padding:16,background:TOKENS.bg}}>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'4px 6px 12px',flexWrap:'wrap',gap:8}}>
+        <div style={{display:'inline-flex',alignItems:'center',gap:8,fontFamily:MONO,fontSize:10,letterSpacing:'0.1em',textTransform:'uppercase',color:TOKENS.ink3}}>
+          {Icon.doc(12)} Pitch deck · 14 slides
+        </div>
+        <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+          <Btn size="sm" variant="ghost" onClick={()=>setN(Math.max(0,n-1))} icon={Icon.chevron(12,'left')}>Prev</Btn>
+          <Btn size="sm" variant="ghost" onClick={()=>setN(Math.min(slides.length-1,n+1))}>Next {Icon.chevron(12,'right')}</Btn>
+          <Btn size="sm" variant="quiet">Full deck {Icon.external()}</Btn>
+        </div>
+      </div>
+      <DeckSlide n={n+1} total={14} {...s}/>
+      <div style={{display:'flex',justifyContent:'center',gap:4,marginTop:12}}>
+        {slides.map((_,i)=>(
+          <button key={i} onClick={()=>setN(i)} style={{width:i===n?18:6,height:4,borderRadius:999,border:0,padding:0,background:i===n?TOKENS.ink:TOKENS.ink4,cursor:'pointer',transition:'all 160ms'}}/>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
+function ValidationModule({ ideaId }) {
+  const [showForm, setShowForm] = React.useState(false);
+  const [rating, setRating] = React.useState(0);
+  const [hoverRating, setHoverRating] = React.useState(0);
+  const validations = VALIDATIONS[ideaId] || [];
+
+  const ratingLabel = ['','Poor','Fair','Good','Great','Excellent'][rating] || '';
+
+  return (
+    <div>
+      {/* Aggregate signal */}
+      {validations.length > 0 && (
+        <Card style={{padding:'18px 22px',marginBottom:16,display:'flex',alignItems:'center',gap:20,flexWrap:'wrap'}}>
+          <div style={{display:'flex',gap:4}}>
+            {[1,2,3,4,5].map(i=>(
+              <span key={i} style={{color:i<=Math.round(validations.reduce((s,v)=>s+v.rating,0)/validations.length)?TOKENS.warn:TOKENS.ink4}}>
+                {Icon.starFilled(16)}
+              </span>
+            ))}
+          </div>
+          <div style={{fontFamily:SANS,fontSize:13,color:TOKENS.ink}}>
+            <span style={{fontWeight:500}}>{(validations.reduce((s,v)=>s+v.rating,0)/validations.length).toFixed(1)}</span>
+            <span style={{color:TOKENS.ink3}}> · {validations.length} tester{validations.length!==1?'s':''} reviewed this idea</span>
+          </div>
+          <div style={{flex:1}}/>
+          {!showForm && <Btn size="sm" variant="quiet" onClick={()=>setShowForm(true)}>Write a review {Icon.arrow(11)}</Btn>}
+        </Card>
+      )}
+
+      {/* Submit form */}
+      {showForm && (
+        <Card style={{padding:22,marginBottom:16}}>
+          <div style={{fontFamily:SANS,fontSize:13,fontWeight:500,color:TOKENS.ink,marginBottom:14}}>Share your testing experience</div>
+          <div style={{display:'flex',gap:6,marginBottom:14,alignItems:'center'}}>
+            {[1,2,3,4,5].map(i=>(
+              <button key={i} onClick={()=>setRating(i)} onMouseEnter={()=>setHoverRating(i)} onMouseLeave={()=>setHoverRating(0)} style={{border:0,background:'transparent',cursor:'pointer',color:(hoverRating||rating)>=i?TOKENS.warn:TOKENS.ink4,padding:2,display:'flex'}}>
+                {Icon.starFilled(22)}
+              </button>
+            ))}
+            {(rating>0)&&<span style={{fontFamily:SANS,fontSize:12,color:TOKENS.ink3,marginLeft:4}}>{ratingLabel}</span>}
+          </div>
+          <div style={{display:'flex',flexDirection:'column',gap:12}}>
+            <Field label="What worked well?"><TextArea placeholder="What impressed you most…" rows={2}/></Field>
+            <Field label="What needs improvement?"><TextArea placeholder="Pain points, missing features…" rows={2}/></Field>
+            <Field label="One-line verdict"><Input placeholder="Would you use this? Would you invest?" full/></Field>
+          </div>
+          <div style={{display:'flex',gap:8,marginTop:16,justifyContent:'flex-end'}}>
+            <Btn size="sm" variant="ghost" onClick={()=>setShowForm(false)}>Cancel</Btn>
+            <Btn size="sm" variant="primary" onClick={()=>setShowForm(false)}>Submit review {Icon.check(11)}</Btn>
+          </div>
+        </Card>
+      )}
+
+      {/* Existing reviews */}
+      {validations.length > 0 ? (
+        <div style={{display:'flex',flexDirection:'column',gap:12}}>
+          {validations.map((v,i)=>(
+            <Card key={i} style={{padding:20}}>
+              <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12,flexWrap:'wrap'}}>
+                <Avatar name={v.user} initials={v.user.slice(0,2)} tone="#3d4a52" size={30}/>
+                <div>
+                  <div style={{fontFamily:SANS,fontSize:13,fontWeight:500,color:TOKENS.ink}}>{v.user}</div>
+                  <div style={{fontFamily:SANS,fontSize:11,color:TOKENS.ink3}}>{v.role} · {v.when} ago</div>
+                </div>
+                <div style={{flex:1}}/>
+                <div style={{display:'flex',gap:3}}>
+                  {[1,2,3,4,5].map(n=>(
+                    <span key={n} style={{color:n<=v.rating?TOKENS.warn:TOKENS.ink4}}>{Icon.starFilled(13)}</span>
+                  ))}
+                </div>
+              </div>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}>
+                <div style={{padding:12,background:TOKENS.raiseBg,borderRadius:8}}>
+                  <div style={{fontFamily:MONO,fontSize:9,color:TOKENS.raise,letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:4}}>Worked well</div>
+                  <div style={{fontFamily:SANS,fontSize:12,color:TOKENS.ink2,lineHeight:1.45}}>{v.worked}</div>
+                </div>
+                <div style={{padding:12,background:TOKENS.warnBg,borderRadius:8}}>
+                  <div style={{fontFamily:MONO,fontSize:9,color:TOKENS.warn,letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:4}}>Needs work</div>
+                  <div style={{fontFamily:SANS,fontSize:12,color:TOKENS.ink2,lineHeight:1.45}}>{v.didnt}</div>
+                </div>
+              </div>
+              <div style={{fontFamily:SERIF,fontSize:14,color:TOKENS.ink,fontStyle:'italic',borderLeft:`2px solid ${TOKENS.ink}`,paddingLeft:12}}>"{v.verdict}"</div>
+            </Card>
+          ))}
+        </div>
+      ) : !showForm && (
+        <EmptyState
+          icon={Icon.star(22)}
+          title="No reviews yet"
+          body="Be the first to test this idea and share your findings with the community."
+          cta="Write first review"
+          onCta={()=>setShowForm(true)}
+        />
+      )}
+    </div>
+  );
+}
+
+function CommentRow({ c }) {
+  return (
+    <div style={{display:'flex',gap:12,paddingTop:16,borderTop:`0.5px solid ${TOKENS.hair}`}}>
+      <Avatar name={c.user} initials={c.user.slice(0,2)} tone={c.isFounder?TOKENS.raise:'#3a3830'} size={32}/>
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{display:'flex',alignItems:'baseline',gap:8,marginBottom:4,flexWrap:'wrap'}}>
+          <span style={{fontFamily:SANS,fontSize:13,fontWeight:500,color:TOKENS.ink}}>{c.user}</span>
+          {c.isFounder && <Pill tone="raise">Founder</Pill>}
+          <span style={{fontFamily:SANS,fontSize:11,color:TOKENS.ink3}}>{c.role} · {c.when}</span>
+        </div>
+        <div style={{fontFamily:SERIF,fontSize:15,color:TOKENS.ink2,lineHeight:1.5,marginBottom:8}}>{c.body}</div>
+        <div style={{display:'flex',alignItems:'center',gap:12,fontFamily:SANS,fontSize:11,color:TOKENS.ink3}}>
+          <button style={{display:'inline-flex',alignItems:'center',gap:4,padding:'3px 8px',borderRadius:6,border:`0.5px solid ${TOKENS.hair}`,background:TOKENS.surface,cursor:'pointer',color:TOKENS.ink2,fontSize:11}}>
+            {Icon.up(11)} {c.vote}
+          </button>
+          <button style={{background:'none',border:0,color:TOKENS.ink3,cursor:'pointer',fontFamily:SANS,fontSize:11}}>Reply</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function InvestPanel({ idea, onCommit }) {
+  const [amount, setAmount] = React.useState(idea.raise.minTicket*4);
+  const cur = idea.geo.includes('DE')?'€':'$';
+  const pct = (idea.raise.raised/idea.raise.target)*100;
+  return (
+    <Card style={{padding:22}}>
+      <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:14,flexWrap:'wrap'}}>
+        <Pill tone="raise" dot>Open raise</Pill>
+        <Pill tone="outline">{idea.stageLabel}</Pill>
+      </div>
+      <div style={{marginBottom:18}}>
+        <div style={{fontFamily:SERIF,fontSize:30,fontWeight:500,color:TOKENS.ink,letterSpacing:'-0.01em'}}>{fmtMoney(idea.raise.raised,cur)}</div>
+        <div style={{fontFamily:SANS,fontSize:12,color:TOKENS.ink3,marginTop:4}}>raised of {fmtMoney(idea.raise.target,cur)} · {Math.round(pct)}% funded</div>
+        <Progress pct={pct} height={5} style={{marginTop:10}}/>
+      </div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:12,paddingTop:16,borderTop:`0.5px solid ${TOKENS.hair}`,marginBottom:18}}>
+        <Stat k="Investors" v={idea.raise.investors} sub="committed"/>
+        <Stat k="Min ticket" v={fmtMoney(idea.raise.minTicket,cur)} sub="per investor"/>
+        <Stat k="Days left" v={idea.raise.daysLeft} sub="remaining"/>
+      </div>
+
+      {/* Raise milestone */}
+      <div style={{marginBottom:18}}>
+        <MilestoneTimeline milestones={[
+          { label:'Posted',  done:true,  date:'Mar 15' },
+          { label:'KYC',     done:true,  date:'Mar 16' },
+          { label:'Live',    done:true,  date:'Mar 18' },
+          { label:'Funded',  current: pct>=100, done:pct>=100 },
+          { label:'Closed',  done:false },
+        ]}/>
+      </div>
+
+      <div style={{marginBottom:14}}>
+        <div style={{display:'flex',justifyContent:'space-between',fontFamily:SANS,fontSize:12,color:TOKENS.ink3,marginBottom:8}}>
+          <span>Your commitment</span>
+          <span style={{fontVariantNumeric:'tabular-nums'}}>min {fmtMoney(idea.raise.minTicket,cur)}</span>
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:0,border:`0.5px solid ${TOKENS.hair}`,borderRadius:8,background:TOKENS.surface,overflow:'hidden'}}>
+          <span style={{padding:'0 14px',fontFamily:SERIF,fontSize:22,color:TOKENS.ink3}}>{cur}</span>
+          <input type="number" value={amount} onChange={(e)=>setAmount(Number(e.target.value))} style={{flex:1,border:0,outline:0,background:'transparent',fontFamily:SERIF,fontSize:22,color:TOKENS.ink,padding:'12px 14px 12px 0',minWidth:0}}/>
+        </div>
+        <div style={{display:'flex',gap:6,marginTop:8}}>
+          {[1,2,4,10].map(m=>(
+            <button key={m} onClick={()=>setAmount(idea.raise.minTicket*m)} style={{flex:1,padding:'6px 0',borderRadius:6,border:`0.5px solid ${TOKENS.hair}`,background:TOKENS.surface,fontFamily:SANS,fontSize:11,color:TOKENS.ink2,cursor:'pointer'}}>
+              {cur}{(idea.raise.minTicket*m).toLocaleString()}
+            </button>
+          ))}
+        </div>
+      </div>
+      <Btn variant="raise" size="lg" full onClick={onCommit}>Commit {cur}{amount.toLocaleString()}</Btn>
+      <div style={{fontFamily:SANS,fontSize:11,color:TOKENS.ink3,marginTop:12,lineHeight:1.5,textAlign:'center'}}>
+        Securities via partner broker-dealer.<br/>Available to: <b style={{color:TOKENS.ink2}}>{idea.raise.available}</b>. KYC required.
+      </div>
+    </Card>
+  );
+}
+
+function IdeaDetail({ ideaId, go, layout, voted, toggleVote, shortlisted, toggleShortlist, onCommit }) {
+  const isMobile = useMediaQuery('(max-width: 767px)');
+  const idea = IDEAS.find(i=>i.id===ideaId);
+  const [activeTab, setActiveTab] = React.useState('overview');
+  if (!idea) return <EmptyState icon={Icon.search(22)} title="Idea not found" body="This idea may have been removed or the link is incorrect." cta="Browse ideas" onCta={()=>go('discover')}/>;
+  const cur = idea.geo.includes('DE')?'€':'$';
+  const comments = COMMENTS_BY_IDEA[idea.id]||[];
+
+  const RAISE_MILESTONES = [
+    { label:'Idea posted', done:true, date:'Mar 15', note:'Listed on Backable' },
+    { label:'KYC verified', done:true, date:'Mar 16', note:'Founder identity confirmed' },
+    { label:'Raise live', done:true, date:'Mar 18', note:'Accepting commitments' },
+    { label:'Target funded', current: idea.raise && (idea.raise.raised/idea.raise.target)>=1, done:false, note:`${fmtMoney(idea.raise?.target||0,cur)} goal` },
+    { label:'Round closes', done:false, note: idea.raise ? `${idea.raise.daysLeft} days away` : '—' },
+    { label:'Funds disbursed', done:false },
+  ];
+
+  const tabs = [
+    { id:'overview',   label:'Overview' },
+    { id:'deck',       label:'Pitch deck' },
+    { id:'traction',   label:'Traction' },
+    { id:'community',  label:'Community' },
+    { id:'validation', label:'Validation' },
+  ];
+
+  const Hero = (
+    <div style={{marginBottom:28}}>
+      <button onClick={()=>go('discover')} style={{display:'inline-flex',alignItems:'center',gap:6,background:'none',border:0,padding:0,cursor:'pointer',fontFamily:SANS,fontSize:12,color:TOKENS.ink3,marginBottom:18}}>
+        <span style={{transform:'rotate(180deg)',display:'inline-flex'}}>{Icon.arrow(12)}</span> Discover
+      </button>
+      <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:14,flexWrap:'wrap'}}>
+        <StageBadge idea={idea}/>
+        {idea.stage==='Raise' && <Pill tone="outline">{idea.stageLabel}</Pill>}
+        <Pill tone="outline">{idea.sector}</Pill>
+        <Pill tone="outline">{idea.geo}</Pill>
+      </div>
+      {idea.badges && idea.badges.length>0 && <div style={{marginBottom:14}}><TrustBadgeRow badges={idea.badges}/></div>}
+      <h1 style={{fontFamily:SERIF,fontSize:isMobile?32:44,fontWeight:500,color:TOKENS.ink,margin:0,letterSpacing:'-0.02em',lineHeight:1.05}}>{idea.name}</h1>
+      <p style={{fontFamily:SERIF,fontSize:isMobile?16:21,color:TOKENS.ink2,margin:'12px 0 0',lineHeight:1.4,maxWidth:720}}>{idea.tagline}</p>
+      <div style={{display:'flex',alignItems:'center',gap:14,marginTop:22,flexWrap:'wrap'}}>
+        <Avatar name={idea.founder.name} initials={idea.founder.initials} tone={idea.founder.tone} size={40}/>
+        <div>
+          <div style={{fontFamily:SANS,fontSize:14,fontWeight:500,color:TOKENS.ink}}>{idea.founder.name}</div>
+          <div style={{fontFamily:SANS,fontSize:12,color:TOKENS.ink3}}>{idea.founder.role}</div>
+        </div>
+        <div style={{flex:1}}/>
+        <VoteButton count={idea.upvotes} onClick={()=>toggleVote(idea.id)} active={voted[idea.id]}/>
+        <Btn variant="ghost" size="md" icon={shortlisted[idea.id]?Icon.bookmarkFilled():Icon.bookmark()} onClick={()=>toggleShortlist(idea.id)}>
+          {shortlisted[idea.id]?'Saved':'Save'}
+        </Btn>
+        {!isMobile && <Btn variant="ghost" size="md">Follow founder</Btn>}
+      </div>
+    </div>
+  );
+
+  /* Inline raise banner for mobile */
+  const MobileRaiseBanner = idea.stage==='Raise' ? (
+    <Card style={{padding:'16px 18px',marginBottom:24,display:'flex',alignItems:'center',gap:16}}>
+      <div style={{flex:1}}>
+        <RaiseProgress idea={idea}/>
+        <div style={{fontFamily:SANS,fontSize:11,color:TOKENS.ink3,marginTop:6}}>{idea.raise.investors} investors · {idea.raise.daysLeft}d left</div>
+      </div>
+      <Btn variant="raise" size="md" onClick={onCommit}>Invest {cur}{fmtMoney(idea.raise.minTicket,cur)}</Btn>
+    </Card>
+  ) : null;
+
+  /* Tab nav */
+  const TabNav = (
+    <div style={{display:'flex',gap:0,borderBottom:`0.5px solid ${TOKENS.hair}`,marginBottom:28,overflowX:'auto',scrollbarWidth:'none'}}>
+      {tabs.map(t=>(
+        <button key={t.id} onClick={()=>setActiveTab(t.id)} style={{
+          padding:'10px 16px',border:0,background:'transparent',cursor:'pointer',
+          fontFamily:SANS,fontSize:13,fontWeight:activeTab===t.id?500:400,
+          color:activeTab===t.id?TOKENS.ink:TOKENS.ink3,
+          borderBottom:`2px solid ${activeTab===t.id?TOKENS.ink:'transparent'}`,
+          marginBottom:-1,whiteSpace:'nowrap',transition:'all 120ms',
+        }}>{t.label}</button>
+      ))}
+    </div>
+  );
+
+  const Overview = (
+    <div style={{display:'flex',flexDirection:'column',gap:32}}>
+      <CoverArt tone={idea.coverTone} height={isMobile?180:300} label={`${idea.sector} · demo video`}/>
+
+      <Section title="The opportunity" kicker="Summary">
+        <p style={{fontFamily:SERIF,fontSize:18,color:TOKENS.ink,lineHeight:1.55,margin:0}}>{idea.summary}</p>
+      </Section>
+
+      {idea.metrics && (
+        <Section title="Key metrics" kicker="Traction at a glance">
+          <Card style={{padding:28,display:'grid',gridTemplateColumns:isMobile?'1fr 1fr':`repeat(${idea.metrics.length},1fr)`,gap:24}}>
+            {idea.metrics.map((m,i)=><Stat key={i} {...m}/>)}
+          </Card>
+        </Section>
+      )}
+
+      {idea.stage==='Raise' && (
+        <Section title="Raise timeline" kicker="Milestones">
+          <Card style={{padding:24}}>
+            <MilestoneTimeline milestones={RAISE_MILESTONES} vertical={isMobile}/>
+          </Card>
+        </Section>
+      )}
+
+      <Section title="Demo & materials" kicker="Test the product">
+        <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'repeat(3,1fr)',gap:14}}>
+          {[
+            { i:Icon.play(), t:'Founder video', s:'4:12 · self-recorded' },
+            { i:Icon.external(14), t:'Live demo', s:'try.backable.com/'+idea.id },
+            { i:Icon.doc(), t:'Data room', s:'NDA-gated · request access' },
+          ].map((x,i)=>(
+            <Card key={i} hoverable style={{padding:18,display:'flex',alignItems:'center',gap:14}}>
+              <div style={{width:36,height:36,borderRadius:8,background:'#efece4',display:'flex',alignItems:'center',justifyContent:'center',color:TOKENS.ink2}}>{x.i}</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontFamily:SANS,fontSize:13,fontWeight:500,color:TOKENS.ink}}>{x.t}</div>
+                <div style={{fontFamily:SANS,fontSize:11,color:TOKENS.ink3,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{x.s}</div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </Section>
+    </div>
+  );
+
+  const TractionTab = (
+    <div style={{display:'flex',flexDirection:'column',gap:24}}>
+      {idea.metrics ? (
+        <>
+          <Card style={{padding:28,display:'grid',gridTemplateColumns:isMobile?'1fr 1fr':`repeat(${idea.metrics.length},1fr)`,gap:24}}>
+            {idea.metrics.map((m,i)=><Stat key={i} {...m} accent={TOKENS.raise}/>)}
+          </Card>
+          <Card style={{padding:24}}>
+            <div style={{fontFamily:MONO,fontSize:10,letterSpacing:'0.12em',textTransform:'uppercase',color:TOKENS.ink3,marginBottom:12}}>Founder narrative</div>
+            <p style={{fontFamily:SERIF,fontSize:16,color:TOKENS.ink2,lineHeight:1.6,margin:0}}>{idea.traction}</p>
+          </Card>
+          <Card style={{padding:20,display:'flex',gap:14,alignItems:'flex-start',background:TOKENS.raiseBg,border:`0.5px solid rgba(31,93,58,0.2)`}}>
+            <div style={{color:TOKENS.raise,display:'flex',flexShrink:0,marginTop:2}}>{Icon.check(18)}</div>
+            <div>
+              <div style={{fontFamily:SANS,fontSize:13,fontWeight:500,color:TOKENS.raise,marginBottom:4}}>Traction verified</div>
+              <div style={{fontFamily:SANS,fontSize:12,color:TOKENS.ink2,lineHeight:1.5}}>Revenue figures confirmed via Stripe integration. User metrics from product analytics.</div>
+            </div>
+          </Card>
+        </>
+      ) : (
+        <EmptyState icon={Icon.chart(22)} title="No traction data" body="This founder hasn't added traction metrics yet."/>
+      )}
+    </div>
+  );
+
+  const CommunityTab = (
+    <div>
+      <Card style={{padding:22}}>
+        <div style={{display:'flex',gap:12,marginBottom:14}}>
+          <Avatar name="You" initials="AC" tone="#3a3830" size={32}/>
+          <textarea placeholder="Ask a question, share what you tested, or push back…" style={{flex:1,minHeight:80,padding:12,borderRadius:8,border:`0.5px solid ${TOKENS.hair}`,background:TOKENS.surface,fontFamily:SERIF,fontSize:15,color:TOKENS.ink,resize:'vertical',outline:0}}/>
+        </div>
+        <div style={{display:'flex',justifyContent:'flex-end',gap:8}}>
+          <Btn size="sm" variant="ghost">Test this idea</Btn>
+          <Btn size="sm" variant="primary">Post comment</Btn>
+        </div>
+        <div style={{marginTop:10}}>
+          {comments.map((c,i)=><CommentRow key={i} c={c}/>)}
+          {comments.length===0 && <div style={{padding:'24px 0',borderTop:`0.5px solid ${TOKENS.hair}`,fontFamily:SANS,fontSize:13,color:TOKENS.ink3,textAlign:'center'}}>Be the first to comment.</div>}
+        </div>
+      </Card>
+    </div>
+  );
+
+  const tabContent = {
+    overview: Overview,
+    deck: <DeckViewer idea={idea}/>,
+    traction: TractionTab,
+    community: CommunityTab,
+    validation: <ValidationModule ideaId={idea.id}/>,
+  };
+
+  const ConceptPanel = (
+    <Card style={{padding:22}}>
+      <Pill tone="concept" dot style={{marginBottom:12}}>Concept</Pill>
+      <h3 style={{fontFamily:SERIF,fontSize:20,fontWeight:500,margin:'0 0 8px',color:TOKENS.ink}}>Not open for investment</h3>
+      <p style={{fontFamily:SERIF,fontSize:14,color:TOKENS.ink2,margin:0,lineHeight:1.5}}>{idea.askLine}</p>
+      <Divider style={{margin:'18px 0'}}/>
+      <Btn variant="primary" size="md" full>Follow this concept</Btn>
+      <Btn variant="ghost" size="md" full style={{marginTop:8}}>Offer to help build it</Btn>
+    </Card>
+  );
+
+  return (
+    <div>
+      {Hero}
+      {isMobile && MobileRaiseBanner}
+      {TabNav}
+      {isMobile ? (
+        <div>{tabContent[activeTab]}</div>
+      ) : (
+        <div style={{display:'grid',gridTemplateColumns:'1fr 360px',gap:36,alignItems:'start'}}>
+          <div>{tabContent[activeTab]}</div>
+          <div style={{position:'sticky',top:96}}>
+            {idea.stage==='Raise' ? <InvestPanel idea={idea} onCommit={onCommit}/> : ConceptPanel}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+// ═══════════════════════════════════════════════
+// 9. FOUNDER PAGES
+// ═══════════════════════════════════════════════
+
+function FounderOnboard({ go }) {
+  const isMobile = useMediaQuery('(max-width: 767px)');
+  const [step, setStep] = React.useState(0);
+  const [form, setForm] = React.useState({ name:'', tagline:'', sector:'', stage:'Raise', summary:'', traction:'', target:500000, minTicket:250, geo:'' });
+  const upd = (k,v) => setForm(f=>({...f,[k]:v}));
+  const steps = ['Identity & KYC','Idea basics','Materials','Raise terms','Review'];
+  const next = () => setStep(s=>Math.min(steps.length-1,s+1));
+  const back = () => setStep(s=>Math.max(0,s-1));
+
+  return (
+    <div style={{maxWidth:760,margin:'0 auto'}}>
+      <div style={{marginBottom:28}}>
+        <Pill tone="raise" dot style={{marginBottom:12}}>List an idea</Pill>
+        <h1 style={{fontFamily:SERIF,fontSize:isMobile?28:36,fontWeight:500,color:TOKENS.ink,margin:0,letterSpacing:'-0.015em'}}>
+          {step===4?'Almost there':step===0?"Let's verify you first":'Tell us about your idea'}
+        </h1>
+        <p style={{fontFamily:SERIF,fontSize:16,color:TOKENS.ink2,marginTop:8,lineHeight:1.5}}>
+          {step===0&&'KYC takes 2 minutes. Required for any open raise.'}
+          {step===1&&'A clean elevator pitch beats a long deck. We\'ll show this in Discover.'}
+          {step===2&&'Add deck, demo, founder video, and traction proof. Skip what you don\'t have.'}
+          {step===3&&'Set the legal structure of your raise. We default to a SAFE.'}
+          {step===4&&'Review and submit. We\'ll review within 48h before publishing.'}
+        </p>
+      </div>
+      <StepIndicator steps={steps} current={step}/>
+      <Card style={{padding:isMobile?24:32}}>
+        {step===0 && (
+          <div style={{display:'flex',flexDirection:'column',gap:20}}>
+            <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'1fr 1fr',gap:16}}>
+              <Field label="Legal first name" required><Input placeholder="As on your ID" full/></Field>
+              <Field label="Legal last name" required><Input placeholder="As on your ID" full/></Field>
+            </div>
+            <Field label="Country of residence" required hint="Determines which regulatory regime applies."><Input placeholder="United States" full/></Field>
+            <Field label="Government ID" required hint="Passport or driver's license. Encrypted at rest.">
+              <UploadTile title="Upload ID" sub="Drag & drop or click (PDF, JPG, PNG)"/>
+            </Field>
+            <Field label="Selfie verification" required hint="Liveness check via our KYC partner.">
+              <UploadTile title="Take selfie" sub="Opens camera · matches against your ID"/>
+            </Field>
+            <div style={{padding:14,background:TOKENS.warnBg,borderRadius:8,fontFamily:SANS,fontSize:12,color:TOKENS.warn,lineHeight:1.5}}>
+              <b>Why we ask:</b> Opening an investment raise requires identity verification by law in every supported jurisdiction.
+            </div>
+          </div>
+        )}
+        {step===1 && (
+          <div style={{display:'flex',flexDirection:'column',gap:20}}>
+            <Field label="Project name" required><Input value={form.name} onChange={(v)=>upd('name',v)} placeholder="e.g. Aurora Loops" full/></Field>
+            <Field label="One-line tagline" required hint="Max 100 chars. The hook that makes someone click."><Input value={form.tagline} onChange={(v)=>upd('tagline',v)} placeholder="Closed-loop fertilizer from urban food waste" full/></Field>
+            <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'1fr 1fr',gap:16}}>
+              <Field label="Sector" required><Input value={form.sector} onChange={(v)=>upd('sector',v)} placeholder="Climate, AI, Fintech…" full/></Field>
+              <Field label="Where based" required><Input value={form.geo} onChange={(v)=>upd('geo',v)} placeholder="Berlin, DE" full/></Field>
+            </div>
+            <Field label="Listing type" required>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+                {[
+                  { id:'Concept', t:'Concept', s:'Free · upvotes & feedback · no investment', icon:Icon.spark() },
+                  { id:'Raise', t:'Open raise', s:'KYC required · accept SAFE commitments', icon:Icon.shield() },
+                ].map(o=>{
+                  const sel = form.stage===o.id;
+                  return (
+                    <button key={o.id} onClick={()=>upd('stage',o.id)} style={{display:'flex',flexDirection:'column',alignItems:'flex-start',gap:6,padding:16,borderRadius:10,textAlign:'left',border:`0.5px solid ${sel?TOKENS.ink:TOKENS.hair}`,background:sel?'#efece4':TOKENS.surface,cursor:'pointer'}}>
+                      <div style={{display:'inline-flex',alignItems:'center',gap:8,color:TOKENS.ink2}}>{o.icon}<span style={{fontFamily:SANS,fontSize:13,fontWeight:500,color:TOKENS.ink}}>{o.t}</span></div>
+                      <span style={{fontFamily:SANS,fontSize:11,color:TOKENS.ink3,lineHeight:1.4}}>{o.s}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </Field>
+            <Field label="Summary" required hint="2-3 paragraphs. What you do, why now, who it's for.">
+              <TextArea value={form.summary} onChange={(v)=>upd('summary',v)} rows={6} placeholder="We collect food waste from restaurants…"/>
+            </Field>
+          </div>
+        )}
+        {step===2 && (
+          <div style={{display:'flex',flexDirection:'column',gap:20}}>
+            <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'1fr 1fr',gap:12}}>
+              <UploadTile title="Pitch deck" sub="PDF or Keynote · we'll embed inline" accent="#e6e0d0"/>
+              <UploadTile title="Founder video" sub="2-5 min · why you, why now" accent="#dee0d8"/>
+              <UploadTile title="Live demo URL" sub="Where investors can test your product" accent="#d8e0e2" optional/>
+              <UploadTile title="Data room" sub="Financials · NDA-gated, request-only" accent="#e2dad8" optional/>
+            </div>
+            <Field label="Traction" hint="Concrete proof. Revenue, users, waitlist, LOIs. Be specific.">
+              <TextArea value={form.traction} onChange={(v)=>upd('traction',v)} rows={4} placeholder="Closed €42k pilot revenue with two restaurant groups…"/>
+            </Field>
+            <div style={{padding:16,background:'#efece4',borderRadius:10,display:'flex',gap:14,alignItems:'flex-start'}}>
+              <div style={{width:28,height:28,borderRadius:6,background:TOKENS.ink,color:TOKENS.surface,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>{Icon.spark()}</div>
+              <div style={{flex:1}}>
+                <div style={{fontFamily:SANS,fontSize:13,fontWeight:500,color:TOKENS.ink,marginBottom:4}}>No deck? Use AI Cofounder</div>
+                <div style={{fontFamily:SANS,fontSize:12,color:TOKENS.ink2,lineHeight:1.5,marginBottom:10}}>Generate a pitch deck, founder video script, and one-pager from your summary. <b>$29 per generation. First 5 listings free.</b></div>
+                <Btn size="sm" variant="primary">Generate with AI · $29</Btn>
+              </div>
+            </div>
+          </div>
+        )}
+        {step===3 && (
+          <div style={{display:'flex',flexDirection:'column',gap:20}}>
+            <div style={{padding:14,background:TOKENS.raiseBg,border:`0.5px solid rgba(31,93,58,0.25)`,borderRadius:8,fontFamily:SANS,fontSize:12,color:TOKENS.raise,lineHeight:1.5}}>
+              <b>Default structure: SAFE</b> via Backable's partner broker-dealer (FINRA-registered). Investors commit, funds escrow, you draw down on close. We file Form C with the SEC.
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'1fr 1fr',gap:16}}>
+              <Field label="Target raise (USD)" required><Input value={form.target.toLocaleString()} placeholder="500,000" full/></Field>
+              <Field label="Minimum ticket" required><Input value={form.minTicket} placeholder="250" full/></Field>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'1fr 1fr',gap:16}}>
+              <Field label="Valuation cap (post)" required><Input placeholder="6,000,000" full/></Field>
+              <Field label="Discount %" hint="Applied if priced round happens before SAFE converts."><Input placeholder="20" full/></Field>
+            </div>
+            <Field label="Available to investors in" required>
+              <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
+                {['🇺🇸 US','🇪🇺 EU','🇬🇧 UK','🇨🇦 Canada','🇸🇬 Singapore','🇰🇪 Kenya','🌍 Other'].map(g=>(
+                  <Pill key={g} tone="outline" style={{cursor:'pointer',padding:'6px 12px'}}>{g}</Pill>
+                ))}
+              </div>
+            </Field>
+            <Field label="Use of funds" required><TextArea rows={4} placeholder="Hire 2 engineers (40%), GTM (30%), inventory (20%), legal & ops (10%)…"/></Field>
+          </div>
+        )}
+        {step===4 && (
+          <div style={{display:'flex',flexDirection:'column',gap:16}}>
+            {[
+              { k:'KYC', v:'Passed · ID verified', ok:true },
+              { k:'Project', v:form.name||'Untitled idea', ok:!!form.name },
+              { k:'Listing type', v:form.stage==='Raise'?'Open raise · SAFE':'Concept', ok:true },
+              { k:'Materials', v:'Deck, video, demo URL', ok:true },
+              { k:'Raise terms', v:'$500k target · $250 min', ok:true },
+              { k:'Review', v:'Backable team will review within 48 hours', ok:false, info:true },
+            ].map((r,i)=>(
+              <div key={i} style={{display:'flex',alignItems:'center',gap:12,padding:'14px 0',borderBottom:i<5?`0.5px solid ${TOKENS.hair}`:'none'}}>
+                <div style={{width:22,height:22,borderRadius:999,background:r.info?'#efece4':TOKENS.raiseBg,color:r.info?TOKENS.ink2:TOKENS.raise,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                  {r.info?Icon.spark(12):Icon.check(12)}
+                </div>
+                <div style={{flex:1}}>
+                  <div style={{fontFamily:SANS,fontSize:12,color:TOKENS.ink3}}>{r.k}</div>
+                  <div style={{fontFamily:SANS,fontSize:14,color:TOKENS.ink,fontWeight:500}}>{r.v}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:28,paddingTop:24,borderTop:`0.5px solid ${TOKENS.hair}`,flexWrap:'wrap',gap:12}}>
+          <Btn variant="ghost" onClick={step===0?()=>go('discover'):back}>{step===0?'Cancel':'Back'}</Btn>
+          <div style={{fontFamily:SANS,fontSize:11,color:TOKENS.ink3}}>Step {step+1} of {steps.length} · 5 free listings</div>
+          <Btn variant="primary" onClick={step===4?()=>go('founder-dashboard'):next}>
+            {step===4?'Submit for review':'Continue'} {Icon.arrow(12)}
+          </Btn>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function FounderDashboard({ go }) {
+  const isMobile = useMediaQuery('(max-width: 767px)');
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:28}}>
+      {/* Live raise hero */}
+      <Card style={{padding:isMobile?24:32,background:'linear-gradient(180deg,#ece8de 0%,#fbfaf6 100%)'}}>
+        <Pill tone="raise" dot style={{marginBottom:12}}>Live raise</Pill>
+        <h2 style={{fontFamily:SERIF,fontSize:isMobile?22:28,fontWeight:500,margin:'0 0 6px',color:TOKENS.ink,letterSpacing:'-0.01em'}}>Aurora Loops</h2>
+        <p style={{fontFamily:SERIF,fontSize:15,color:TOKENS.ink2,margin:'0 0 20px'}}>Closed-loop fertilizer from urban food waste</p>
+        <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr 1fr':'repeat(4,1fr)',gap:isMobile?16:22,marginBottom:18}}>
+          <Stat k="Raised" v="€412k" sub="of €800k target"/>
+          <Stat k="Investors" v="188" sub="committed"/>
+          <Stat k="Page views" v="12,420" sub="last 7d"/>
+          <Stat k="Days left" v="22" sub="in this raise"/>
+        </div>
+        <Progress pct={51.5}/>
+        <div style={{marginTop:16}}>
+          <MilestoneTimeline milestones={[
+            { label:'Posted', done:true, date:'Mar 15' },
+            { label:'KYC', done:true, date:'Mar 16' },
+            { label:'Live', done:true, date:'Mar 18' },
+            { label:'50% funded', done:true, date:'Apr 2' },
+            { label:'Closed', done:false },
+          ]}/>
+        </div>
+        <div style={{display:'flex',gap:8,marginTop:22,flexWrap:'wrap'}}>
+          <Btn variant="primary" size="sm" onClick={()=>go('idea/aurora')}>View public page {Icon.external()}</Btn>
+          <Btn variant="ghost" size="sm">Post update</Btn>
+          <Btn variant="ghost" size="sm">Message investors</Btn>
+        </div>
+      </Card>
+
+      <Section title="Engagement" kicker="Last 7 days">
+        <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'repeat(3,1fr)',gap:16}}>
+          {[
+            { k:'New comments', v:'24', sub:'8 unanswered' },
+            { k:'New watchers', v:'142', sub:'+18% WoW' },
+            { k:'Deck opens', v:'892', sub:'avg 4.2 slides read' },
+          ].map((s,i)=><Card key={i} style={{padding:22}}><Stat {...s}/></Card>)}
+        </div>
+      </Section>
+
+      <Section title="Investor Q&A" kicker="Unanswered">
+        <Card style={{overflow:'hidden'}}>
+          {[
+            { user:'Lina W.', role:'Climate investor', body:'Unit economics — what\'s payback per digester?', when:'5h', urgent:true },
+            { user:'M. Larsson', role:'Investor', body:'What\'s customer concentration risk in first 12 months?', when:'1d', urgent:false },
+          ].map((q,i)=>(
+            <div key={i} style={{display:'flex',gap:14,padding:'16px 20px',borderBottom:i<1?`0.5px solid ${TOKENS.hair}`:'none',alignItems:'flex-start'}}>
+              <Avatar name={q.user} initials={q.user.slice(0,2)} tone="#3a3830" size={30}/>
+              <div style={{flex:1}}>
+                <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:4,flexWrap:'wrap'}}>
+                  <span style={{fontFamily:SANS,fontSize:13,fontWeight:500,color:TOKENS.ink}}>{q.user}</span>
+                  <Pill tone="outline">{q.role}</Pill>
+                  {q.urgent && <Pill tone="closing" dot>Unanswered</Pill>}
+                  <span style={{fontFamily:SANS,fontSize:11,color:TOKENS.ink4}}>{q.when} ago</span>
+                </div>
+                <div style={{fontFamily:SERIF,fontSize:14,color:TOKENS.ink2,lineHeight:1.45,marginBottom:10}}>{q.body}</div>
+                <Btn size="sm" variant="quiet">Reply as founder</Btn>
+              </div>
+            </div>
+          ))}
+        </Card>
+      </Section>
+
+      <Section title="Plan & usage" kicker="Free tier">
+        <Card style={{padding:24}}>
+          <div style={{display:'flex',alignItems:'center',gap:16,marginBottom:16,flexWrap:'wrap'}}>
+            <div style={{flex:1}}>
+              <div style={{fontFamily:SANS,fontSize:12,color:TOKENS.ink3,marginBottom:4}}>Free listings used</div>
+              <div style={{fontFamily:SERIF,fontSize:24,fontWeight:500}}>2 <span style={{color:TOKENS.ink3}}>/ 5</span></div>
+            </div>
+            <Btn variant="ghost" size="sm">Upgrade Founder Pro · $39/mo</Btn>
+          </div>
+          <Progress pct={40}/>
+          <div style={{fontFamily:SANS,fontSize:12,color:TOKENS.ink3,marginTop:14,lineHeight:1.5}}>
+            5 free listings forever. AI deck/video generation: <b style={{color:TOKENS.ink2}}>$29 per generation</b>. Closing fee on funded raises: <b style={{color:TOKENS.ink2}}>5%</b>.
+          </div>
+        </Card>
+      </Section>
+    </div>
+  );
+}
+
+function FounderProfile({ founderId, go }) {
+  const isMobile = useMediaQuery('(max-width: 767px)');
+  const profile = FOUNDER_PROFILES[founderId];
+  const [followed, setFollowed] = React.useState(false);
+  if (!profile) return <EmptyState icon={Icon.user(22)} title="Profile not found" body="This founder profile doesn't exist." cta="Browse ideas" onCta={()=>go('discover')}/>;
+  const ideas = IDEAS.filter(i=>profile.ideaIds.includes(i.id));
+
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:28}}>
+      {/* Profile header */}
+      <Card style={{padding:isMobile?24:36}}>
+        <div style={{display:'flex',gap:20,alignItems:'flex-start',flexWrap:isMobile?'wrap':'nowrap'}}>
+          <Avatar name={profile.name} initials={profile.initials} tone={profile.tone} size={isMobile?56:72}/>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{display:'flex',alignItems:'flex-start',gap:12,flexWrap:'wrap',marginBottom:8}}>
+              <h1 style={{fontFamily:SERIF,fontSize:isMobile?24:32,fontWeight:500,color:TOKENS.ink,letterSpacing:'-0.015em',margin:0}}>{profile.name}</h1>
+              <Pill tone="raise" dot>KYC verified</Pill>
+            </div>
+            <div style={{fontFamily:SANS,fontSize:14,color:TOKENS.ink3,marginBottom:8}}>{profile.role} · {profile.location}</div>
+            <p style={{fontFamily:SERIF,fontSize:15,color:TOKENS.ink2,lineHeight:1.55,margin:'0 0 16px',maxWidth:600}}>{profile.bio}</p>
+            <div style={{display:'flex',gap:20,fontFamily:SANS,fontSize:13,color:TOKENS.ink3,marginBottom:16,flexWrap:'wrap'}}>
+              <span><b style={{color:TOKENS.ink}}>{profile.followers.toLocaleString()}</b> followers</span>
+              <span><b style={{color:TOKENS.ink}}>{profile.following}</b> following</span>
+              <span>Joined {profile.joined}</span>
+              {profile.socialX && <span style={{display:'inline-flex',alignItems:'center',gap:4}}>{Icon.globe(12)} {profile.socialX}</span>}
+            </div>
+            <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+              <Btn variant={followed?'quiet':'primary'} size="md" onClick={()=>setFollowed(f=>!f)}>
+                {followed?'Following':'Follow founder'}
+              </Btn>
+              <Btn variant="ghost" size="md">Send message</Btn>
+            </div>
+          </div>
+        </div>
+        <Divider style={{margin:'24px 0'}}/>
+        <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr 1fr':'repeat(4,1fr)',gap:20}}>
+          <Stat k="Ideas listed" v={profile.stats.ideas}/>
+          <Stat k="Total raised" v={profile.stats.raised}/>
+          <Stat k="Investors" v={profile.stats.investors}/>
+          <Stat k="Avg funding" v={profile.stats.avgFunding}/>
+        </div>
+      </Card>
+
+      {/* Active ideas */}
+      <Section title="Active raises" kicker={`${ideas.filter(i=>i.stage==='Raise').length} open`}>
+        {ideas.filter(i=>i.stage==='Raise').length>0 ? (
+          <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'repeat(2,1fr)',gap:18}}>
+            {ideas.filter(i=>i.stage==='Raise').map(idea=>{
+              const pct=(idea.raise.raised/idea.raise.target)*100;
+              const cur=idea.geo.includes('DE')?'€':'$';
+              return (
+                <Card key={idea.id} hoverable onClick={()=>go('idea/'+idea.id)} style={{overflow:'hidden'}}>
+                  <CoverArt tone={idea.coverTone} height={130} label={idea.sector} style={{borderRadius:'14px 14px 0 0'}}/>
+                  <div style={{padding:'18px 20px 20px'}}>
+                    <StageBadge idea={idea}/>
+                    <h3 style={{fontFamily:SERIF,fontSize:20,fontWeight:500,color:TOKENS.ink,margin:'10px 0 4px',letterSpacing:'-0.01em'}}>{idea.name}</h3>
+                    <p style={{fontFamily:SANS,fontSize:13,color:TOKENS.ink3,margin:'0 0 14px',lineHeight:1.4}}>{idea.tagline}</p>
+                    <div style={{marginBottom:14}}>
+                      <div style={{display:'flex',justifyContent:'space-between',fontFamily:SANS,fontSize:11,color:TOKENS.ink3,marginBottom:4}}>
+                        <span style={{color:TOKENS.raise,fontWeight:600}}>{fmtMoney(idea.raise.raised,cur)} raised</span>
+                        <span>{Math.round(pct)}%</span>
+                      </div>
+                      <Progress pct={pct} height={3}/>
+                    </div>
+                    <TrustBadgeRow badges={idea.badges}/>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        ) : (
+          <EmptyState icon={Icon.spark(22)} title="No active raises" body="This founder has no currently open raises."/>
+        )}
+      </Section>
+    </div>
+  );
+}
+
+
+// ═══════════════════════════════════════════════
+// 10. INVESTOR PAGES
+// ═══════════════════════════════════════════════
+
+function InvestorOnboard({ go }) {
+  const isMobile = useMediaQuery('(max-width: 767px)');
+  const [step, setStep] = React.useState(0);
+  const [accred, setAccred] = React.useState(null);
+  const steps = ['Account','Identity','Suitability','Done'];
+  return (
+    <div style={{maxWidth:640,margin:'0 auto'}}>
+      <div style={{marginBottom:28}}>
+        <Pill tone="raise" dot style={{marginBottom:12}}>Investor onboarding</Pill>
+        <h1 style={{fontFamily:SERIF,fontSize:isMobile?26:36,fontWeight:500,margin:0,letterSpacing:'-0.015em'}}>
+          {step===0&&'Open your investor account'}
+          {step===1&&'Verify your identity'}
+          {step===2&&'Tell us how you invest'}
+          {step===3&&"You're in."}
+        </h1>
+        <p style={{fontFamily:SERIF,fontSize:16,color:TOKENS.ink2,marginTop:8,lineHeight:1.5}}>
+          {step===0&&'Browsing & community is free forever. Investing requires a verified account.'}
+          {step===1&&'Same KYC every regulated platform requires. Encrypted, never shared.'}
+          {step===2&&'This determines what you can invest in and how much under Reg CF.'}
+          {step===3&&'Welcome to Backable. Some featured raises to get you started.'}
+        </p>
+      </div>
+      <StepIndicator steps={steps} current={step}/>
+      <Card style={{padding:isMobile?24:32}}>
+        {step===0 && (
+          <div style={{display:'flex',flexDirection:'column',gap:18}}>
+            <Field label="Full name" required><Input placeholder="As on your ID" full/></Field>
+            <Field label="Email" required><Input placeholder="you@domain.com" full/></Field>
+            <Field label="Country of residence" required hint="We onboard investors in: US, UK, EU, Canada, Singapore."><Input placeholder="United States" full/></Field>
+            <Field label="Password" required><Input placeholder="••••••••" type="password" full/></Field>
+            <div style={{padding:14,background:'#efece4',borderRadius:8,fontFamily:SANS,fontSize:12,color:TOKENS.ink2,lineHeight:1.5}}>
+              By continuing you agree to our <u>Terms</u>, <u>Privacy Policy</u>, and <u>Investor Education</u> module. Equity crowdfunding is high-risk; you can lose your entire investment.
+            </div>
+          </div>
+        )}
+        {step===1 && (
+          <div style={{display:'flex',flexDirection:'column',gap:18}}>
+            <Field label="Government ID" required><UploadTile title="Upload ID" sub="Passport or driver's license · encrypted"/></Field>
+            <Field label="Proof of address" required hint="Utility bill or bank statement, last 90 days."><UploadTile title="Upload statement" sub="PDF or image"/></Field>
+            <Field label="Tax ID / SSN last 4" required><Input placeholder="••••" full/></Field>
+            <div style={{padding:14,background:TOKENS.warnBg,borderRadius:8,fontFamily:SANS,fontSize:12,color:TOKENS.warn,lineHeight:1.5}}>
+              <b>Why we ask:</b> AML/KYC required by FINRA, FinCEN, and equivalent regulators globally. We use Persona for verification — typically clears in under 5 minutes.
+            </div>
+          </div>
+        )}
+        {step===2 && (
+          <div style={{display:'flex',flexDirection:'column',gap:18}}>
+            <Field label="Investor type" required>
+              <div style={{display:'grid',gap:10}}>
+                {[
+                  { id:'retail', t:'Retail / non-accredited', s:'Annual investment cap based on income & net worth (Reg CF)' },
+                  { id:'accredited', t:'Accredited investor', s:'$200k+ income or $1M+ net worth · no annual cap' },
+                  { id:'entity', t:'Entity / fund', s:'LLC, fund, family office · additional docs required' },
+                ].map(o=>{
+                  const sel=accred===o.id;
+                  return (
+                    <button key={o.id} onClick={()=>setAccred(o.id)} style={{display:'flex',alignItems:'center',gap:14,padding:16,borderRadius:10,textAlign:'left',border:`0.5px solid ${sel?TOKENS.ink:TOKENS.hair}`,background:sel?'#efece4':TOKENS.surface,cursor:'pointer'}}>
+                      <div style={{width:18,height:18,borderRadius:999,border:`1.5px solid ${sel?TOKENS.ink:TOKENS.ink4}`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                        {sel && <div style={{width:8,height:8,borderRadius:999,background:TOKENS.ink}}/>}
+                      </div>
+                      <div style={{flex:1}}>
+                        <div style={{fontFamily:SANS,fontSize:14,fontWeight:500,color:TOKENS.ink}}>{o.t}</div>
+                        <div style={{fontFamily:SANS,fontSize:12,color:TOKENS.ink3,marginTop:2}}>{o.s}</div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </Field>
+            <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'1fr 1fr',gap:14}}>
+              <Field label="Annual income (USD)"><Input placeholder="100,000" full/></Field>
+              <Field label="Net worth (USD)"><Input placeholder="350,000" full/></Field>
+            </div>
+            {accred==='retail' && (
+              <div style={{padding:14,background:TOKENS.raiseBg,borderRadius:8,fontFamily:SANS,fontSize:12,color:TOKENS.raise,lineHeight:1.5}}>
+                Based on your inputs you can invest up to <b>$11,200 across all crowdfunding platforms</b> in the next 12 months.
+              </div>
+            )}
+          </div>
+        )}
+        {step===3 && (
+          <div style={{textAlign:'center',padding:'20px 0'}}>
+            <div style={{width:64,height:64,borderRadius:999,background:TOKENS.raiseBg,color:TOKENS.raise,display:'inline-flex',alignItems:'center',justifyContent:'center',marginBottom:18}}>{Icon.check(28)}</div>
+            <p style={{fontFamily:SERIF,fontSize:16,color:TOKENS.ink2,lineHeight:1.5}}>You're verified and ready to invest. Annual cap: <b>$11,200</b>.</p>
+            <Btn variant="primary" size="lg" style={{marginTop:16}} onClick={()=>go('discover')}>Browse open raises {Icon.arrow(12)}</Btn>
+          </div>
+        )}
+        {step<3 && (
+          <div style={{display:'flex',justifyContent:'space-between',marginTop:28,paddingTop:24,borderTop:`0.5px solid ${TOKENS.hair}`,flexWrap:'wrap',gap:12}}>
+            <Btn variant="ghost" onClick={()=>step===0?go('discover'):setStep(step-1)}>{step===0?'Cancel':'Back'}</Btn>
+            <Btn variant="primary" onClick={()=>setStep(step+1)}>Continue {Icon.arrow(12)}</Btn>
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+}
+
+function InvestorDashboard({ go }) {
+  const isMobile = useMediaQuery('(max-width: 767px)');
+  const totalIn  = PORTFOLIO.reduce((s,p)=>s+p.invested,0);
+  const totalNow = PORTFOLIO.reduce((s,p)=>s+p.current,0);
+  const gainPct  = totalIn>0?((totalNow-totalIn)/totalIn*100).toFixed(1):0;
+
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:28}}>
+      {/* Overview stats */}
+      <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr 1fr':'repeat(4,1fr)',gap:16}}>
+        {[
+          { k:'Total invested',   v:`$${totalIn.toLocaleString()}`,   sub:`${PORTFOLIO.length} positions` },
+          { k:'Current value',    v:`$${totalNow.toLocaleString()}`,  sub:`${gainPct>0?'+':''}${gainPct}% overall` },
+          { k:'Annual cap used',  v:'$4,750', sub:'of $11,200 (Reg CF)' },
+          { k:'Watching',         v:'42',     sub:'ideas on shortlist' },
+        ].map((s,i)=>(
+          <Card key={i} style={{padding:22}}><Stat {...s} accent={i===1&&gainPct>0?TOKENS.raise:undefined}/></Card>
+        ))}
+      </div>
+
+      {/* Holdings table */}
+      <Section title="Holdings" kicker="Marked-to-last-round">
+        <Card style={{overflow:'hidden'}}>
+          <div style={{display:'grid',gridTemplateColumns:isMobile?'2fr 1fr 1fr':'2fr 1fr 1fr 1fr 1fr 1fr',padding:'14px 22px',background:'#efece4',fontFamily:MONO,fontSize:10,letterSpacing:'0.1em',textTransform:'uppercase',color:TOKENS.ink3}}>
+            <div>Company</div><div>Invested</div>
+            {!isMobile&&<><div>Current</div><div>Change</div><div>Status</div><div>Date</div></>}
+            {isMobile&&<div>Status</div>}
+          </div>
+          {PORTFOLIO.map((p,i)=>(
+            <div key={p.id} onClick={()=>p.id!=='cipher'?go('idea/'+p.id):null} style={{
+              display:'grid',gridTemplateColumns:isMobile?'2fr 1fr 1fr':'2fr 1fr 1fr 1fr 1fr 1fr',
+              padding:'18px 22px',borderTop:`0.5px solid ${TOKENS.hair}`,
+              fontFamily:SANS,fontSize:13,color:TOKENS.ink,alignItems:'center',
+              cursor:p.id!=='cipher'?'pointer':'default',transition:'background 120ms',
+            }}
+              onMouseEnter={(e)=>p.id!=='cipher'&&(e.currentTarget.style.background=TOKENS.hair2)}
+              onMouseLeave={(e)=>e.currentTarget.style.background='transparent'}
+            >
+              <div style={{fontWeight:500}}>{p.name}</div>
+              <div style={{fontVariantNumeric:'tabular-nums'}}>${p.invested.toLocaleString()}</div>
+              {!isMobile&&<>
+                <div style={{fontVariantNumeric:'tabular-nums'}}>${p.current.toLocaleString()}</div>
+                <div style={{fontVariantNumeric:'tabular-nums',color:p.change.startsWith('+')?TOKENS.raise:(p.change.startsWith('−')?TOKENS.closing:TOKENS.ink3)}}>{p.change}</div>
+              </>}
+              <div><Pill tone={p.stage==='Active'?'raise':(p.stage==='Wound down'?'closing':'outline')} dot>{p.stage}</Pill></div>
+              {!isMobile&&<div style={{color:TOKENS.ink3}}>{p.date}</div>}
+            </div>
+          ))}
+        </Card>
+        <div style={{fontFamily:SANS,fontSize:11,color:TOKENS.ink3,marginTop:10,lineHeight:1.5}}>
+          Past performance is not indicative of future results. Equity crowdfunding investments are illiquid.
+        </div>
+      </Section>
+
+      {/* Recommended ideas */}
+      <Section title="Recommended for you" kicker="Based on your portfolio" action={<Btn variant="ghost" size="sm" onClick={()=>go('discover')}>See all {Icon.arrow(11)}</Btn>}>
+        <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'repeat(3,1fr)',gap:16}}>
+          {IDEAS.filter(i=>i.stage==='Raise').slice(0,3).map(idea=>{
+            const pct=(idea.raise.raised/idea.raise.target)*100;
+            const cur=idea.geo.includes('DE')?'€':'$';
+            return (
+              <Card key={idea.id} hoverable onClick={()=>go('idea/'+idea.id)} style={{padding:16}}>
+                <CoverArt tone={idea.coverTone} height={90} style={{marginBottom:12}}/>
+                <div style={{display:'flex',gap:6,marginBottom:8,flexWrap:'wrap'}}><StageBadge idea={idea}/><Pill tone="outline">{idea.sector}</Pill></div>
+                <div style={{fontFamily:SERIF,fontSize:16,fontWeight:500,color:TOKENS.ink,letterSpacing:'-0.01em',marginBottom:4}}>{idea.name}</div>
+                <div style={{fontFamily:SANS,fontSize:12,color:TOKENS.ink3,marginBottom:12,lineHeight:1.35}}>{idea.tagline}</div>
+                <div style={{marginBottom:10}}>
+                  <div style={{display:'flex',justifyContent:'space-between',fontFamily:SANS,fontSize:11,color:TOKENS.ink3,marginBottom:3}}>
+                    <span style={{color:TOKENS.raise,fontWeight:600}}>{Math.round(pct)}% funded</span>
+                    <span>{idea.raise.daysLeft}d left</span>
+                  </div>
+                  <Progress pct={pct} height={3}/>
+                </div>
+                <Btn variant="raise" size="sm" full>Invest from {fmtMoney(idea.raise.minTicket,cur)}</Btn>
+              </Card>
+            );
+          })}
+        </div>
+      </Section>
+    </div>
+  );
+}
+
+function Shortlist({ go, shortlisted, toggleShortlist }) {
+  const isMobile = useMediaQuery('(max-width: 767px)');
+  const ids = Object.keys(shortlisted).filter(id=>shortlisted[id]);
+  const list = ids.length ? IDEAS.filter(i=>ids.includes(i.id)) : [];
+
+  return (
+    <div>
+      {list.length===0 ? (
+        <EmptyState
+          icon={Icon.bookmark(24)}
+          title="Your shortlist is empty"
+          body="Browse ideas and tap the bookmark icon to save raises you want to track or revisit."
+          cta="Browse ideas"
+          onCta={()=>go('discover')}
+        />
+      ) : (
+        <div>
+          <div style={{marginBottom:18,fontFamily:SANS,fontSize:13,color:TOKENS.ink3}}>{ids.length} idea{ids.length!==1?'s':''} on your shortlist.</div>
+          <Card style={{overflow:'hidden'}}>
+            {list.map((i,idx)=>(
+              <FeedRow key={i.id} idea={i} rank={idx+1} onOpen={()=>go('idea/'+i.id)} onVote={()=>{}} voted={false}/>
+            ))}
+          </Card>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Compare({ go }) {
+  const isMobile = useMediaQuery('(max-width: 767px)');
+  const ideas = IDEAS.filter(i=>i.stage==='Raise').slice(0,3);
+  const cur = (i) => i.geo.includes('DE')?'€':'$';
+
+  if (isMobile) {
+    return (
+      <div style={{display:'flex',flexDirection:'column',gap:16}}>
+        <div style={{fontFamily:SANS,fontSize:13,color:TOKENS.ink3,marginBottom:4}}>Tap any card to open the full raise page.</div>
+        {ideas.map(idea=>{
+          const pct=(idea.raise.raised/idea.raise.target)*100;
+          return (
+            <Card key={idea.id} style={{padding:20}}>
+              <div style={{display:'flex',gap:14,alignItems:'flex-start'}}>
+                <CoverArt tone={idea.coverTone} height={60} style={{width:80,flexShrink:0}}/>
+                <div style={{flex:1}}>
+                  <div style={{fontFamily:SERIF,fontSize:18,fontWeight:500,color:TOKENS.ink,marginBottom:2}}>{idea.name}</div>
+                  <div style={{fontFamily:SANS,fontSize:12,color:TOKENS.ink3,marginBottom:10}}>{idea.stageLabel} · {idea.sector}</div>
+                  <Progress pct={pct} height={3}/>
+                  <div style={{display:'flex',justifyContent:'space-between',fontFamily:SANS,fontSize:11,color:TOKENS.ink3,marginTop:4}}>
+                    <span>{Math.round(pct)}% funded</span><span>{idea.raise.daysLeft}d left</span>
+                  </div>
+                </div>
+              </div>
+              <Btn variant="raise" size="sm" full style={{marginTop:14}} onClick={()=>go('idea/'+idea.id)}>Invest from {fmtMoney(idea.raise.minTicket,cur(idea))}</Btn>
+            </Card>
+          );
+        })}
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div style={{marginBottom:18,fontFamily:SANS,fontSize:13,color:TOKENS.ink3}}>Comparing {ideas.length} raises side-by-side. Click any column header to view the full page.</div>
+      <Card style={{overflow:'hidden'}}>
+        <div style={{display:'grid',gridTemplateColumns:`200px repeat(${ideas.length},1fr)`}}>
+          <div style={{padding:22,background:'#efece4',borderBottom:`0.5px solid ${TOKENS.hair}`}}/>
+          {ideas.map(i=>(
+            <div key={i.id} onClick={()=>go('idea/'+i.id)} style={{padding:22,background:'#efece4',borderBottom:`0.5px solid ${TOKENS.hair}`,borderLeft:`0.5px solid ${TOKENS.hair}`,cursor:'pointer'}}>
+              <CoverArt tone={i.coverTone} height={70} style={{marginBottom:12}}/>
+              <div style={{fontFamily:SERIF,fontSize:18,fontWeight:500,color:TOKENS.ink,marginBottom:2}}>{i.name}</div>
+              <div style={{fontFamily:SANS,fontSize:12,color:TOKENS.ink3,lineHeight:1.4}}>{i.tagline}</div>
+            </div>
+          ))}
+          {[
+            { k:'Stage', v:i=>i.stageLabel },
+            { k:'Sector', v:i=>i.sector },
+            { k:'Geography', v:i=>i.geo },
+            { k:'Target raise', v:i=>fmtMoney(i.raise.target,cur(i)) },
+            { k:'Raised so far', v:i=>`${fmtMoney(i.raise.raised,cur(i))} (${Math.round(i.raise.raised/i.raise.target*100)}%)` },
+            { k:'Valuation', v:i=>i.raise.valuation },
+            { k:'Min ticket', v:i=>fmtMoney(i.raise.minTicket,cur(i)) },
+            { k:'Investors', v:i=>i.raise.investors },
+            { k:'Days left', v:i=>`${i.raise.daysLeft} days` },
+            { k:'Available to', v:i=>i.raise.available },
+            { k:'Community signal', v:i=>`${i.upvotes.toLocaleString()} upvotes` },
+            { k:'Top metric', v:i=>i.metrics?.[0]?`${i.metrics[0].v} ${i.metrics[0].k.toLowerCase()}`:'—' },
+            { k:'Trust badges', v:i=>i.badges?.join(' · ')||'—' },
+          ].map((row,idx)=>(
+            <React.Fragment key={idx}>
+              <div style={{padding:'14px 22px',borderTop:`0.5px solid ${TOKENS.hair}`,fontFamily:MONO,fontSize:10,letterSpacing:'0.1em',textTransform:'uppercase',color:TOKENS.ink3,display:'flex',alignItems:'center'}}>{row.k}</div>
+              {ideas.map(i=>(
+                <div key={i.id} style={{padding:'14px 22px',borderTop:`0.5px solid ${TOKENS.hair}`,borderLeft:`0.5px solid ${TOKENS.hair}`,fontFamily:SANS,fontSize:13,color:TOKENS.ink,fontVariantNumeric:'tabular-nums'}}>{row.v(i)}</div>
+              ))}
+            </React.Fragment>
+          ))}
+          <div style={{padding:18,borderTop:`0.5px solid ${TOKENS.hair}`}}/>
+          {ideas.map(i=>(
+            <div key={i.id} style={{padding:18,borderTop:`0.5px solid ${TOKENS.hair}`,borderLeft:`0.5px solid ${TOKENS.hair}`}}>
+              <Btn variant="raise" size="sm" full onClick={()=>go('idea/'+i.id)}>Invest from {fmtMoney(i.raise.minTicket,cur(i))}</Btn>
+            </div>
+          ))}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+
+// ═══════════════════════════════════════════════
+// 11. COMMIT MODAL
+// ═══════════════════════════════════════════════
+
+function CommitModal({ idea, onClose }) {
+  const [step, setStep] = React.useState(0);
+  if (!idea) return null;
+  const cur = idea.geo.includes('DE')?'€':'$';
+  return (
+    <div onClick={onClose} style={{position:'fixed',inset:0,zIndex:1000,background:'rgba(20,18,12,0.45)',backdropFilter:'blur(4px)',display:'flex',alignItems:'center',justifyContent:'center',padding:24}}>
+      <div onClick={(e)=>e.stopPropagation()} style={{width:'100%',maxWidth:520,background:TOKENS.surface,borderRadius:16,border:`0.5px solid ${TOKENS.hair}`,boxShadow:'0 20px 60px rgba(20,18,12,0.25)',overflow:'hidden'}}>
+        <div style={{padding:'22px 28px',borderBottom:`0.5px solid ${TOKENS.hair}`,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+          <div>
+            <div style={{fontFamily:MONO,fontSize:10,letterSpacing:'0.12em',textTransform:'uppercase',color:TOKENS.ink3,marginBottom:2}}>Commit · {idea.name}</div>
+            <div style={{fontFamily:SERIF,fontSize:20,fontWeight:500,color:TOKENS.ink}}>
+              {step===0&&'Review your commitment'}
+              {step===1&&'Sign the SAFE'}
+              {step===2&&"You're in"}
+            </div>
+          </div>
+          <button onClick={onClose} style={{width:32,height:32,borderRadius:8,border:`0.5px solid ${TOKENS.hair}`,background:TOKENS.surface,cursor:'pointer',color:TOKENS.ink3,fontSize:18,lineHeight:1,display:'flex',alignItems:'center',justifyContent:'center'}}>{Icon.close(14)}</button>
+        </div>
+        <div style={{padding:28}}>
+          {step===0 && (
+            <div style={{display:'flex',flexDirection:'column',gap:14}}>
+              {[
+                ['Investing in', idea.name],
+                ['Instrument', `Post-money SAFE · ${idea.raise.valuation} cap`],
+                ['Amount', `${cur}1,000`],
+                ['Annual cap remaining after', '$10,200 of $11,200'],
+                ['Funds escrowed by', 'North Capital (FINRA-registered)'],
+                ['Refundable until', '48h before close · Apr 30, 2026'],
+              ].map(([k,v],i)=>(
+                <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'10px 0',borderBottom:i<5?`0.5px solid ${TOKENS.hair}`:'none'}}>
+                  <span style={{fontFamily:SANS,fontSize:12,color:TOKENS.ink3}}>{k}</span>
+                  <span style={{fontFamily:SANS,fontSize:13,color:TOKENS.ink,fontWeight:500}}>{v}</span>
+                </div>
+              ))}
+              <div style={{padding:14,background:TOKENS.warnBg,borderRadius:8,fontFamily:SANS,fontSize:12,color:TOKENS.warn,lineHeight:1.5}}>
+                Equity crowdfunding is high-risk and illiquid. You can lose your entire investment.
+              </div>
+            </div>
+          )}
+          {step===1 && (
+            <div style={{display:'flex',flexDirection:'column',gap:14}}>
+              <div style={{height:200,background:TOKENS.bg,borderRadius:8,padding:16,fontFamily:SERIF,fontSize:12,color:TOKENS.ink2,lineHeight:1.5,overflow:'auto'}}>
+                <p style={{margin:0}}><b>SIMPLE AGREEMENT FOR FUTURE EQUITY</b></p>
+                <p>This certifies that in exchange for the payment by the Investor of $1,000.00 (the "Purchase Amount"), {idea.name} (the "Company"), a Delaware corporation, hereby issues to the Investor the right to certain shares of the Company's capital stock…</p>
+                <p>1. <b>Events.</b> Equity Financing. If there is an Equity Financing before the termination of this Safe…</p>
+                <p>2. <b>Definitions.</b> "Post-Money Valuation Cap" means {idea.raise.valuation}…</p>
+              </div>
+              <Field label="Type your full legal name to sign"><Input full placeholder="Jane Doe"/></Field>
+            </div>
+          )}
+          {step===2 && (
+            <div style={{textAlign:'center',padding:'14px 0'}}>
+              <div style={{width:56,height:56,borderRadius:999,background:TOKENS.raiseBg,color:TOKENS.raise,display:'inline-flex',alignItems:'center',justifyContent:'center',marginBottom:14}}>{Icon.check(24)}</div>
+              <div style={{fontFamily:SERIF,fontSize:18,color:TOKENS.ink2,lineHeight:1.5}}>
+                $1,000 committed to {idea.name}.<br/>Funds escrowed. We'll email you when the raise closes.
+              </div>
+            </div>
+          )}
+        </div>
+        <div style={{padding:'16px 28px',borderTop:`0.5px solid ${TOKENS.hair}`,display:'flex',justifyContent:'space-between',background:TOKENS.bg}}>
+          <Btn variant="ghost" onClick={onClose}>{step===2?'Close':'Cancel'}</Btn>
+          {step<2 && <Btn variant="raise" onClick={()=>setStep(s=>s+1)}>{step===0?'Continue to SAFE':'Sign & commit'} {Icon.arrow(12)}</Btn>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════
+// 12. NOTIFICATIONS
+// ═══════════════════════════════════════════════
+
+function Notifications({ go }) {
+  const isMobile = useMediaQuery('(max-width: 767px)');
+  const [filter, setFilter] = React.useState('all');
+  const [notifs, setNotifs] = React.useState(NOTIFICATIONS);
+
+  const tabs = [
+    { id:'all',        label:'All' },
+    { id:'raise',      label:'Investments' },
+    { id:'comment',    label:'Comments' },
+    { id:'system',     label:'System' },
+  ];
+
+  const iconForType = (type) => {
+    if (type==='raise')   return <div style={{width:32,height:32,borderRadius:999,background:TOKENS.raiseBg,color:TOKENS.raise,display:'flex',alignItems:'center',justifyContent:'center'}}>{Icon.chart(14)}</div>;
+    if (type==='closing') return <div style={{width:32,height:32,borderRadius:999,background:TOKENS.closingBg,color:TOKENS.closing,display:'flex',alignItems:'center',justifyContent:'center'}}>{Icon.clock(14)}</div>;
+    if (type==='comment') return <div style={{width:32,height:32,borderRadius:999,background:'#efece4',color:TOKENS.ink2,display:'flex',alignItems:'center',justifyContent:'center'}}>{Icon.comment(14)}</div>;
+    if (type==='system')  return <div style={{width:32,height:32,borderRadius:999,background:TOKENS.blueBg,color:TOKENS.blue,display:'flex',alignItems:'center',justifyContent:'center'}}>{Icon.shield(14)}</div>;
+    return <div style={{width:32,height:32,borderRadius:999,background:'#efece4',color:TOKENS.ink3,display:'flex',alignItems:'center',justifyContent:'center'}}>{Icon.bell(14)}</div>;
+  };
+
+  const filtered = filter==='all' ? notifs : notifs.filter(n=>n.type===filter||n.type==='closing'&&filter==='raise');
+  const unreadCount = notifs.filter(n=>n.unread).length;
+
+  const markAllRead = () => setNotifs(ns=>ns.map(n=>({...n,unread:false})));
+
+  return (
+    <div style={{maxWidth:680}}>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20,flexWrap:'wrap',gap:12}}>
+        <div style={{display:'flex',gap:0,borderBottom:`0.5px solid ${TOKENS.hair}`,flex:1}}>
+          {tabs.map(t=>(
+            <button key={t.id} onClick={()=>setFilter(t.id)} style={{
+              padding:'10px 16px',border:0,background:'transparent',cursor:'pointer',
+              fontFamily:SANS,fontSize:13,fontWeight:filter===t.id?500:400,
+              color:filter===t.id?TOKENS.ink:TOKENS.ink3,
+              borderBottom:`2px solid ${filter===t.id?TOKENS.ink:'transparent'}`,
+              marginBottom:-1,whiteSpace:'nowrap',transition:'all 120ms',
+            }}>{t.label}</button>
+          ))}
+        </div>
+        {unreadCount>0 && <button onClick={markAllRead} style={{border:0,background:'transparent',fontFamily:SANS,fontSize:12,color:TOKENS.ink3,cursor:'pointer',textDecoration:'underline',whiteSpace:'nowrap'}}>Mark all read</button>}
+      </div>
+
+      {filtered.length===0 ? (
+        <EmptyState icon={Icon.bell(22)} title="All caught up" body="No notifications in this category."/>
+      ) : (
+        <div style={{display:'flex',flexDirection:'column',gap:0}}>
+          {filtered.map((n,i)=>(
+            <div key={n.id} onClick={n.ideaId?()=>go('idea/'+n.ideaId):undefined} style={{
+              display:'flex',gap:14,padding:'16px 18px',borderBottom:`0.5px solid ${TOKENS.hair}`,
+              cursor:n.ideaId?'pointer':'default',
+              background:n.unread?'rgba(31,93,58,0.03)':'transparent',
+              transition:'background 120ms',borderRadius:i===0?'14px 14px 0 0':i===filtered.length-1?'0 0 14px 14px':'0',
+            }}
+              onMouseEnter={(e)=>n.ideaId&&(e.currentTarget.style.background=TOKENS.hair2)}
+              onMouseLeave={(e)=>e.currentTarget.style.background=n.unread?'rgba(31,93,58,0.03)':'transparent'}
+            >
+              <div style={{flexShrink:0,marginTop:2}}>{iconForType(n.type)}</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontFamily:SANS,fontSize:13,color:TOKENS.ink,lineHeight:1.45,marginBottom:4}}>{n.body}</div>
+                <div style={{fontFamily:SANS,fontSize:11,color:TOKENS.ink4}}>{n.when} ago{n.ideaId?` · ${IDEAS.find(i=>i.id===n.ideaId)?.name||''}`:''}</div>
+              </div>
+              {n.unread && <div style={{width:8,height:8,borderRadius:999,background:TOKENS.raise,flexShrink:0,marginTop:6}}/>}
+              {n.ideaId && <div style={{color:TOKENS.ink4,display:'flex',alignItems:'center',flexShrink:0}}>{Icon.chevron(14,'right')}</div>}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+// ═══════════════════════════════════════════════
+// 13. PROFILE & SETTINGS
+// ═══════════════════════════════════════════════
+
+function ProfileSettings({ user }) {
+  const isMobile = useMediaQuery('(max-width: 767px)');
+  const [tab, setTab] = React.useState('profile');
+  const [notifToggles, setNotifToggles] = React.useState({
+    newComment:true, raiseUpdate:true, closingSoon:true, newInvestor:true, systemAlerts:true, weeklyDigest:false,
+  });
+  const toggleN = (k) => setNotifToggles(t=>({...t,[k]:!t[k]}));
+
+  const ToggleRow = ({ label, sub, k }) => (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 0',borderBottom:`0.5px solid ${TOKENS.hair}`}}>
+      <div>
+        <div style={{fontFamily:SANS,fontSize:13,fontWeight:500,color:TOKENS.ink}}>{label}</div>
+        {sub && <div style={{fontFamily:SANS,fontSize:12,color:TOKENS.ink3,marginTop:2}}>{sub}</div>}
+      </div>
+      <button onClick={()=>toggleN(k)} style={{
+        position:'relative',width:38,height:22,borderRadius:999,border:0,cursor:'pointer',flexShrink:0,
+        background:notifToggles[k]?TOKENS.raise:'rgba(20,18,12,0.15)',transition:'background 180ms',
+      }}>
+        <span style={{position:'absolute',top:3,left:notifToggles[k]?17:3,width:16,height:16,borderRadius:999,background:'#fff',boxShadow:'0 1px 3px rgba(0,0,0,0.2)',transition:'left 180ms'}}/>
+      </button>
+    </div>
+  );
+
+  const tabs = [
+    { id:'profile', label:'Profile' },
+    { id:'security', label:'Security' },
+    { id:'notifications', label:'Notifications' },
+    { id:'investment', label:'Investment' },
+  ];
+
+  return (
+    <div style={{maxWidth:680}}>
+      {/* Tab nav */}
+      <div style={{display:'flex',gap:0,borderBottom:`0.5px solid ${TOKENS.hair}`,marginBottom:28,overflowX:'auto',scrollbarWidth:'none'}}>
+        {tabs.map(t=>(
+          <button key={t.id} onClick={()=>setTab(t.id)} style={{
+            padding:'10px 18px',border:0,background:'transparent',cursor:'pointer',
+            fontFamily:SANS,fontSize:13,fontWeight:tab===t.id?500:400,
+            color:tab===t.id?TOKENS.ink:TOKENS.ink3,
+            borderBottom:`2px solid ${tab===t.id?TOKENS.ink:'transparent'}`,
+            marginBottom:-1,whiteSpace:'nowrap',transition:'all 120ms',
+          }}>{t.label}</button>
+        ))}
+      </div>
+
+      {tab==='profile' && (
+        <div style={{display:'flex',flexDirection:'column',gap:20}}>
+          {/* Avatar */}
+          <Card style={{padding:24}}>
+            <div style={{display:'flex',gap:16,alignItems:'center',marginBottom:20,flexWrap:'wrap'}}>
+              <Avatar name={user.name} initials={user.initials} tone="#3a3830" size={56}/>
+              <div>
+                <div style={{fontFamily:SANS,fontSize:14,fontWeight:500,color:TOKENS.ink,marginBottom:4}}>{user.name}</div>
+                <div style={{fontFamily:SANS,fontSize:12,color:TOKENS.ink3,marginBottom:10}}>{user.role}</div>
+                <Btn size="sm" variant="quiet">Change photo</Btn>
+              </div>
+            </div>
+            <Divider style={{marginBottom:20}}/>
+            <div style={{display:'flex',flexDirection:'column',gap:16}}>
+              <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'1fr 1fr',gap:16}}>
+                <Field label="Display name"><Input value={user.name} full/></Field>
+                <Field label="Username"><Input value="@averychen" full/></Field>
+              </div>
+              <Field label="Bio" hint="Max 200 characters. Shown on your public profile."><TextArea placeholder="Investor · climate tech · angel" rows={3}/></Field>
+              <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'1fr 1fr',gap:16}}>
+                <Field label="Location"><Input placeholder="San Francisco, US" full/></Field>
+                <Field label="Website"><Input placeholder="https://yoursite.com" full/></Field>
+              </div>
+              <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'1fr 1fr',gap:16}}>
+                <Field label="X / Twitter handle"><Input placeholder="@yourhandle" full/></Field>
+                <Field label="LinkedIn URL"><Input placeholder="linkedin.com/in/you" full/></Field>
+              </div>
+            </div>
+          </Card>
+          <div style={{display:'flex',justifyContent:'flex-end',gap:8}}>
+            <Btn variant="ghost">Discard</Btn>
+            <Btn variant="primary">Save changes</Btn>
+          </div>
+        </div>
+      )}
+
+      {tab==='security' && (
+        <div style={{display:'flex',flexDirection:'column',gap:16}}>
+          <Card style={{padding:24}}>
+            <div style={{fontFamily:SANS,fontSize:14,fontWeight:500,color:TOKENS.ink,marginBottom:16}}>Login credentials</div>
+            <div style={{display:'flex',flexDirection:'column',gap:16}}>
+              <Field label="Email address"><Input value="avery@example.com" full/></Field>
+              <Field label="Current password"><Input type="password" placeholder="••••••••" full/></Field>
+              <Field label="New password"><Input type="password" placeholder="••••••••" full/></Field>
+              <Field label="Confirm new password"><Input type="password" placeholder="••••••••" full/></Field>
+            </div>
+            <div style={{display:'flex',justifyContent:'flex-end',marginTop:20}}>
+              <Btn variant="primary">Update password</Btn>
+            </div>
+          </Card>
+          <Card style={{padding:24}}>
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
+              <div>
+                <div style={{fontFamily:SANS,fontSize:14,fontWeight:500,color:TOKENS.ink,marginBottom:4}}>Two-factor authentication</div>
+                <div style={{fontFamily:SANS,fontSize:13,color:TOKENS.ink3}}>Add an extra layer of security to your account.</div>
+              </div>
+              <Btn variant="quiet" size="sm">Enable 2FA</Btn>
+            </div>
+          </Card>
+          <Card style={{padding:24,border:`0.5px solid ${TOKENS.closingBg}`}}>
+            <div style={{fontFamily:SANS,fontSize:14,fontWeight:500,color:TOKENS.closing,marginBottom:8}}>Danger zone</div>
+            <div style={{fontFamily:SANS,fontSize:13,color:TOKENS.ink3,marginBottom:14}}>Permanently delete your account and all associated data.</div>
+            <Btn variant="danger" size="sm">Delete account</Btn>
+          </Card>
+        </div>
+      )}
+
+      {tab==='notifications' && (
+        <Card style={{padding:24}}>
+          <div style={{fontFamily:SANS,fontSize:14,fontWeight:500,color:TOKENS.ink,marginBottom:4}}>Email & in-app notifications</div>
+          <div style={{fontFamily:SANS,fontSize:12,color:TOKENS.ink3,marginBottom:20}}>Choose what you want to be notified about.</div>
+          <ToggleRow label="New comments on saved ideas" sub="When someone comments on an idea you follow" k="newComment"/>
+          <ToggleRow label="Raise milestones" sub="Funding percentage updates for ideas you're watching" k="raiseUpdate"/>
+          <ToggleRow label="Closing soon alerts" sub="72h and 24h reminders before raises close" k="closingSoon"/>
+          <ToggleRow label="New investor on your raise" sub="For founders only" k="newInvestor"/>
+          <ToggleRow label="System alerts" sub="KYC status, account changes, legal notices" k="systemAlerts"/>
+          <ToggleRow label="Weekly digest" sub="Top raises and community highlights every Monday" k="weeklyDigest"/>
+        </Card>
+      )}
+
+      {tab==='investment' && (
+        <div style={{display:'flex',flexDirection:'column',gap:16}}>
+          <Card style={{padding:24}}>
+            <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:16,flexWrap:'wrap'}}>
+              <div style={{width:40,height:40,borderRadius:10,background:TOKENS.raiseBg,display:'flex',alignItems:'center',justifyContent:'center',color:TOKENS.raise,flexShrink:0}}>{Icon.check(20)}</div>
+              <div>
+                <div style={{fontFamily:SANS,fontSize:14,fontWeight:500,color:TOKENS.ink}}>KYC verified · Retail investor</div>
+                <div style={{fontFamily:SANS,fontSize:12,color:TOKENS.ink3,marginTop:2}}>Identity confirmed via Persona · Verified Apr 12, 2026</div>
+              </div>
+            </div>
+            <Divider style={{marginBottom:16}}/>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20,marginBottom:16}}>
+              <Stat k="Annual cap" v="$11,200" sub="Reg CF limit"/>
+              <Stat k="Cap used" v="$4,750" sub="42% of limit"/>
+            </div>
+            <Progress pct={42}/>
+            <div style={{fontFamily:SANS,fontSize:12,color:TOKENS.ink3,marginTop:10,lineHeight:1.5}}>
+              Your $6,450 remaining cap resets on <b style={{color:TOKENS.ink2}}>Jan 1, 2027</b>.
+            </div>
+          </Card>
+          <Card style={{padding:24}}>
+            <div style={{fontFamily:SANS,fontSize:14,fontWeight:500,color:TOKENS.ink,marginBottom:14}}>Accreditation</div>
+            <div style={{padding:16,background:'#efece4',borderRadius:8,fontFamily:SANS,fontSize:13,color:TOKENS.ink2,lineHeight:1.5}}>
+              You're currently registered as a <b>Retail / non-accredited investor</b>. Upgrade to accredited status to remove annual investment caps.
+            </div>
+            <Btn variant="quiet" size="sm" style={{marginTop:14}}>Apply for accredited status</Btn>
+          </Card>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+// ═══════════════════════════════════════════════
+// 14. ADMIN MODERATION
+// ═══════════════════════════════════════════════
+
+function AdminModeration({ go }) {
+  const isMobile = useMediaQuery('(max-width: 767px)');
+  const [tab, setTab] = React.useState('pending');
+  const [selected, setSelected] = React.useState(null);
+  const [queue, setQueue] = React.useState(ADMIN_QUEUE);
+  const [noteInput, setNoteInput] = React.useState('');
+
+  const filtered = queue.filter(q=>q.status===tab);
+  const pending  = queue.filter(q=>q.status==='pending').length;
+
+  const approve = (id) => setQueue(q=>q.map(x=>x.id===id?{...x,status:'live'}:x));
+  const reject  = (id) => setQueue(q=>q.map(x=>x.id===id?{...x,status:'rejected'}:x));
+
+  const statusPill = (s) => {
+    if (s==='pending') return <Pill tone="warn" dot>Pending</Pill>;
+    if (s==='live')    return <Pill tone="raise" dot>Live</Pill>;
+    if (s==='rejected')return <Pill tone="closing" dot>Rejected</Pill>;
+    return null;
+  };
+
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:24}}>
+      {/* Stats row */}
+      <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr 1fr':'repeat(4,1fr)',gap:14}}>
+        {[
+          { k:'Pending review', v:String(pending), sub:'need action', accent:pending>0?TOKENS.warn:undefined },
+          { k:'Approved today', v:'3', sub:'went live' },
+          { k:'Rejected this week', v:'1', sub:'with notes' },
+          { k:'Total live ideas', v:String(queue.filter(q=>q.status==='live').length), sub:'on platform' },
+        ].map((s,i)=>(
+          <Card key={i} style={{padding:20}}><Stat {...s}/></Card>
+        ))}
+      </div>
+
+      {/* Tab bar */}
+      <div style={{display:'flex',gap:0,borderBottom:`0.5px solid ${TOKENS.hair}`}}>
+        {[
+          { id:'pending',  label:`Pending (${pending})` },
+          { id:'live',     label:'Live' },
+          { id:'rejected', label:'Rejected' },
+        ].map(t=>(
+          <button key={t.id} onClick={()=>{ setTab(t.id); setSelected(null); }} style={{
+            padding:'10px 18px',border:0,background:'transparent',cursor:'pointer',
+            fontFamily:SANS,fontSize:13,fontWeight:tab===t.id?500:400,
+            color:tab===t.id?TOKENS.ink:TOKENS.ink3,
+            borderBottom:`2px solid ${tab===t.id?TOKENS.ink:'transparent'}`,
+            marginBottom:-1,whiteSpace:'nowrap',transition:'all 120ms',
+          }}>{t.label}</button>
+        ))}
+      </div>
+
+      {filtered.length===0 ? (
+        <EmptyState icon={Icon.check(22)} title={`No ${tab} submissions`} body={tab==='pending'?'All caught up — no ideas waiting for review.':'Nothing to show here.'}/>
+      ) : (
+        <div style={{display:'grid',gridTemplateColumns:selected&&!isMobile?'1fr 360px':'1fr',gap:24,alignItems:'start'}}>
+          {/* Table */}
+          <Card style={{overflow:'hidden'}}>
+            {!isMobile && (
+              <div style={{display:'grid',gridTemplateColumns:'2fr 1fr 1fr 1fr 1fr 120px',padding:'12px 20px',background:'#efece4',fontFamily:MONO,fontSize:10,letterSpacing:'0.1em',textTransform:'uppercase',color:TOKENS.ink3}}>
+                <div>Idea</div><div>Founder</div><div>Type</div><div>Sector</div><div>Submitted</div><div>Actions</div>
+              </div>
+            )}
+            {filtered.map((item,i)=>(
+              <div key={item.id} onClick={()=>setSelected(selected?.id===item.id?null:item)} style={{
+                display:isMobile?'block':'grid',
+                gridTemplateColumns:'2fr 1fr 1fr 1fr 1fr 120px',
+                padding:isMobile?'16px 18px':'16px 20px',
+                borderTop:`0.5px solid ${TOKENS.hair}`,
+                cursor:'pointer',transition:'background 120ms',
+                background:selected?.id===item.id?TOKENS.hair2:'transparent',
+              }}
+                onMouseEnter={(e)=>selected?.id!==item.id&&(e.currentTarget.style.background=TOKENS.hair2)}
+                onMouseLeave={(e)=>selected?.id!==item.id&&(e.currentTarget.style.background='transparent')}
+              >
+                {isMobile ? (
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:12}}>
+                    <div>
+                      <div style={{fontFamily:SANS,fontSize:14,fontWeight:500,color:TOKENS.ink,marginBottom:4}}>{item.name}</div>
+                      <div style={{fontFamily:SANS,fontSize:12,color:TOKENS.ink3}}>{item.founder} · {item.sector}</div>
+                      <div style={{marginTop:8,display:'flex',gap:6,flexWrap:'wrap'}}>
+                        {statusPill(item.status)}
+                        <Pill tone="outline">{item.type}</Pill>
+                        <Pill tone="outline">{item.submitted}</Pill>
+                      </div>
+                    </div>
+                    {tab==='pending' && (
+                      <div style={{display:'flex',flexDirection:'column',gap:6,flexShrink:0}}>
+                        <Btn size="sm" variant="raise" onClick={(e)=>{e.stopPropagation();approve(item.id);}}>Approve</Btn>
+                        <Btn size="sm" variant="danger" onClick={(e)=>{e.stopPropagation();reject(item.id);}}>Reject</Btn>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    <div>
+                      <div style={{fontFamily:SANS,fontSize:13,fontWeight:500,color:TOKENS.ink}}>{item.name}</div>
+                      <div style={{display:'flex',gap:6,marginTop:4,flexWrap:'wrap'}}>
+                        {statusPill(item.status)}
+                        <span style={{fontFamily:MONO,fontSize:10,color:TOKENS.ink4}}>↑ {item.signal.toLocaleString()} signal</span>
+                      </div>
+                    </div>
+                    <div style={{fontFamily:SANS,fontSize:13,color:TOKENS.ink2,display:'flex',alignItems:'center'}}>{item.founder}</div>
+                    <div style={{display:'flex',alignItems:'center'}}><Pill tone="outline">{item.type}</Pill></div>
+                    <div style={{fontFamily:SANS,fontSize:13,color:TOKENS.ink2,display:'flex',alignItems:'center'}}>{item.sector}</div>
+                    <div style={{fontFamily:SANS,fontSize:13,color:TOKENS.ink3,display:'flex',alignItems:'center'}}>{item.submitted}</div>
+                    <div style={{display:'flex',alignItems:'center',gap:6}}>
+                      {tab==='pending' ? (
+                        <>
+                          <Btn size="sm" variant="raise" onClick={(e)=>{e.stopPropagation();approve(item.id);}}>Approve</Btn>
+                          <Btn size="sm" variant="danger" onClick={(e)=>{e.stopPropagation();reject(item.id);}}>Reject</Btn>
+                        </>
+                      ) : (
+                        <Btn size="sm" variant="ghost" onClick={(e)=>{e.stopPropagation();go('idea/'+IDEAS.find(x=>x.name===item.name)?.id||'discover')}}>View</Btn>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            ))}
+          </Card>
+
+          {/* Detail panel */}
+          {selected && (
+            <Card style={{padding:24,position:isMobile?'static':'sticky',top:96}}>
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
+                <div style={{fontFamily:SERIF,fontSize:20,fontWeight:500,color:TOKENS.ink}}>{selected.name}</div>
+                <button onClick={()=>setSelected(null)} style={{border:0,background:'transparent',color:TOKENS.ink3,cursor:'pointer',display:'flex',padding:4}}>{Icon.close(14)}</button>
+              </div>
+              <div style={{display:'flex',flexDirection:'column',gap:10,marginBottom:18}}>
+                {[
+                  ['Founder', selected.founder],
+                  ['Type', selected.type],
+                  ['Sector', selected.sector],
+                  ['Submitted', selected.submitted],
+                  ['Community signal', `${selected.signal.toLocaleString()} upvotes`],
+                  ['Status', selected.status.charAt(0).toUpperCase()+selected.status.slice(1)],
+                ].map(([k,v])=>(
+                  <div key={k} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:`0.5px solid ${TOKENS.hair}`}}>
+                    <span style={{fontFamily:SANS,fontSize:12,color:TOKENS.ink3}}>{k}</span>
+                    <span style={{fontFamily:SANS,fontSize:13,color:TOKENS.ink,fontWeight:500}}>{v}</span>
+                  </div>
+                ))}
+              </div>
+              <Field label="Internal notes">
+                <TextArea value={selected.notes||noteInput} onChange={(v)=>setNoteInput(v)} rows={3} placeholder="Add moderation notes…"/>
+              </Field>
+              {tab==='pending' && (
+                <div style={{display:'flex',gap:8,marginTop:16}}>
+                  <Btn variant="raise" full onClick={()=>{approve(selected.id);setSelected(null);}}>Approve & publish</Btn>
+                  <Btn variant="danger" onClick={()=>{reject(selected.id);setSelected(null);}}>Reject</Btn>
+                </div>
+              )}
+              <Btn variant="ghost" size="sm" style={{marginTop:10,width:'100%'}} onClick={()=>go('discover')}>Request changes from founder</Btn>
+            </Card>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+// ═══════════════════════════════════════════════
+// 15. STRATEGY MEMO (preserved from ZIP)
+// ═══════════════════════════════════════════════
+
+function StrategyBlock({ kicker, title, children }) {
+  return (
+    <section style={{paddingTop:36,marginBottom:36,borderTop:`0.5px solid ${TOKENS.hair}`}}>
+      <div style={{fontFamily:MONO,fontSize:10,letterSpacing:'0.14em',textTransform:'uppercase',color:TOKENS.ink3,marginBottom:8}}>{kicker}</div>
+      <h2 style={{fontFamily:SERIF,fontSize:32,fontWeight:500,margin:'0 0 18px',color:TOKENS.ink,letterSpacing:'-0.015em',lineHeight:1.15}}>{title}</h2>
+      <div style={{fontFamily:SERIF,fontSize:16,color:TOKENS.ink2,lineHeight:1.65}}>{children}</div>
+    </section>
+  );
+}
+
+function Strategy() {
+  const isMobile = useMediaQuery('(max-width: 767px)');
+  return (
+    <div style={{maxWidth:760,margin:'0 auto'}}>
+      <Pill tone="outline" style={{marginBottom:14}}>Cofounder memo · v0.1 · Apr 2026</Pill>
+      <h1 style={{fontFamily:SERIF,fontSize:isMobile?36:48,fontWeight:500,margin:0,letterSpacing:'-0.02em',lineHeight:1.05}}>Backable</h1>
+      <p style={{fontFamily:SERIF,fontSize:isMobile?18:22,color:TOKENS.ink2,marginTop:14,lineHeight:1.4}}>
+        Product Hunt × AngelList. A community-driven marketplace where founders post ideas and raises, and anyone can discover, debate, and back them.
+      </p>
+      <StrategyBlock kicker="01" title="What we're really building">
+        <p>A two-layer platform. A free <b>community layer</b> (post, upvote, comment, follow) that's globally open and behaves like a Reddit-for-startups. And a regulated <b>investment layer</b> that opens country-by-country, starting with US Reg CF via a partner broker-dealer.</p>
+        <p style={{marginTop:14}}>The community layer creates the dealflow funnel. The investment layer monetizes it. Decoupling them is what makes this both legally tractable and culturally interesting — most equity crowdfunding sites are dry catalogs because they skipped the social layer.</p>
+      </StrategyBlock>
+      <StrategyBlock kicker="02" title="MVP — what ships in 90 days">
+        <ul style={{listStyle:'none',padding:0,margin:'8px 0 0',display:'flex',flexDirection:'column',gap:10}}>
+          {[
+            'Discover feed with Concepts vs Raises split, upvotes, comments, search, sector filter.',
+            'Idea page with embedded deck, founder video, demo link, traction metrics, comments, sticky invest panel.',
+            'Founder onboarding — KYC via Persona, listing wizard, AI deck generation.',
+            'Investor onboarding — KYC + accreditation, annual cap tracker, US-only at MVP.',
+            'Investor dashboard — holdings, marks, watchlist, compare-up-to-4 tool.',
+            'Trust scaffolding — verified-founder badges, traction-via-Stripe integration.',
+          ].map((it,i)=>(
+            <li key={i} style={{display:'flex',gap:12}}>
+              <span style={{width:6,height:6,borderRadius:999,background:TOKENS.ink2,marginTop:11,flexShrink:0}}/>
+              <span>{it}</span>
+            </li>
+          ))}
+        </ul>
+      </StrategyBlock>
+      <StrategyBlock kicker="03" title="Monetization — five revenue lines">
+        <ul style={{listStyle:'none',padding:0,margin:'8px 0 0',display:'flex',flexDirection:'column',gap:10}}>
+          {[
+            <span><b>1. AI deck/material generation — $29/generation.</b> Live day 1. Founders without a deck pay.</span>,
+            <span><b>2. Founder Pro — $39/month.</b> Unlimited AI, listing boosts, analytics.</span>,
+            <span><b>3. Closing fee on funded raises — 5%.</b> On a $500k raise that's $25k. Industry standard is 5–7.5%.</span>,
+            <span><b>4. Investor Pro — $19/month.</b> Early access to raises, advanced filters, exportable reports.</span>,
+            <span><b>5. Data/insights to VCs — later.</b> Aggregated, anonymized signal. High-margin at scale.</span>,
+          ].map((it,i)=>(
+            <li key={i} style={{display:'flex',gap:12}}>
+              <span style={{width:6,height:6,borderRadius:999,background:TOKENS.ink2,marginTop:11,flexShrink:0}}/>
+              <span>{it}</span>
+            </li>
+          ))}
+        </ul>
+      </StrategyBlock>
+      <StrategyBlock kicker="04" title="Legal-safe investment model">
+        <p><b>We are not the broker-dealer.</b> Backable is a technology and curation layer; the actual securities transactions happen on a partner FINRA-registered broker-dealer (e.g. Dalmore, North Capital).</p>
+        <p style={{marginTop:14}}><b>Default instrument: post-money SAFE</b> with valuation cap and discount. Standardized template (YC-style).</p>
+        <p style={{marginTop:14}}><b>US: Reg CF.</b> Allows non-accredited investors. Cap of $5M per issuer per 12 months. Form C filed with SEC. Cleanest path to market.</p>
+      </StrategyBlock>
+      <StrategyBlock kicker="05" title="Technical architecture">
+        <ul style={{listStyle:'none',padding:0,margin:'8px 0 0',display:'flex',flexDirection:'column',gap:10}}>
+          {[
+            <span><b>Frontend:</b> Next.js + React Native (mobile v2). TypeScript. Custom design system on top of Tailwind primitives.</span>,
+            <span><b>Backend:</b> Postgres, Redis, S3. Node + tRPC. Inngest for async jobs (Form C, AI deck gen, KYC webhooks).</span>,
+            <span><b>Auth & KYC:</b> Clerk (auth) + Persona (KYC/AML) + Plaid (bank verification, traction proof).</span>,
+            <span><b>Broker-dealer:</b> North Capital or Dalmore via REST for escrow + Form C filing.</span>,
+            <span><b>AI:</b> Claude for deck generation, video script, comment summarization. Embeddings for semantic search.</span>,
+            <span><b>Search:</b> Typesense. Feed ranking: recency × upvotes × commenter quality × founder verification.</span>,
+          ].map((it,i)=>(
+            <li key={i} style={{display:'flex',gap:12}}>
+              <span style={{width:6,height:6,borderRadius:999,background:TOKENS.ink2,marginTop:11,flexShrink:0}}/>
+              <span>{it}</span>
+            </li>
+          ))}
+        </ul>
+      </StrategyBlock>
+    </div>
+  );
+}
+
+
+// ═══════════════════════════════════════════════
+// 16. APP SHELL
+// ═══════════════════════════════════════════════
+
+function App() {
+  const [route, setRoute]           = React.useState('home');
+  const [voted, setVoted]           = React.useState({});
+  const [shortlisted, setShortlisted] = React.useState({ glyph:true, noma:true });
+  const [commitFor, setCommitFor]   = React.useState(null);
+  const [feedLayout, setFeedLayout] = React.useState('editorial');
+  const isMobile = useMediaQuery('(max-width: 767px)');
+
+  const go = (r) => { setRoute(r); window.scrollTo(0,0); };
+  const toggleVote      = (id) => setVoted(v=>({...v,[id]:!v[id]}));
+  const toggleShortlist = (id) => setShortlisted(s=>({...s,[id]:!s[id]}));
+
+  const user = { name:'Avery Chen', role:'Investor · KYC verified', initials:'AC' };
+
+  const unreadCount = NOTIFICATIONS.filter(n=>n.unread).length;
+
+  // Derive current nav item for highlighting
+  const navCurrent = React.useMemo(()=>{
+    if (route.startsWith('idea/'))    return 'discover';
+    if (route.startsWith('founder/')) return 'discover';
+    return route;
+  }, [route]);
+
+  // Page title / kicker lookup
+  const getMeta = () => {
+    if (route==='home')             return { title:'Home', kicker:'Welcome back, Avery' };
+    if (route==='discover')         return { title:'Discover', kicker:`${IDEAS.filter(i=>i.stage==='Raise').length} open raises · ${IDEAS.filter(i=>i.stage==='Concept').length} concepts`, showSearch:true };
+    if (route==='shortlist')        return { title:'Shortlist', kicker:'Ideas you\'re tracking' };
+    if (route==='compare')          return { title:'Compare raises', kicker:'Side-by-side · open in any tab' };
+    if (route==='portfolio')        return { title:'Portfolio', kicker:'Your investments' };
+    if (route==='notifications')    return { title:'Notifications', kicker:unreadCount>0?`${unreadCount} unread`:'All caught up' };
+    if (route==='investor-onboard') return { title:'Investor onboarding', kicker:'' };
+    if (route==='founder-onboard')  return { title:'List an idea', kicker:'Concept or open raise' };
+    if (route==='founder-dashboard')return { title:'Founder dashboard', kicker:'Your active raise' };
+    if (route==='profile-settings') return { title:'Profile & settings', kicker:user.name };
+    if (route==='admin')            return { title:'Moderation', kicker:'Admin only' };
+    if (route==='strategy')         return { title:'Strategy memo', kicker:'Concept · GTM · monetization · legal' };
+    if (route.startsWith('idea/')) {
+      const id = route.split('/')[1];
+      const idea = IDEAS.find(i=>i.id===id);
+      return { title:idea?.name||'Idea', kicker:idea?.tagline||'' };
+    }
+    if (route.startsWith('founder/')) return { title:'Founder profile', kicker:'' };
+    return { title:'Backable', kicker:'' };
+  };
+
+  const meta = getMeta();
+  const [search, setSearch] = React.useState('');
+
+  const renderContent = () => {
+    if (route==='home')              return <Homepage go={go}/>;
+    if (route==='discover')          return <Discover go={go} layout={feedLayout} voted={voted} toggleVote={toggleVote} shortlisted={shortlisted} toggleShortlist={toggleShortlist}/>;
+    if (route==='shortlist')         return <Shortlist go={go} shortlisted={shortlisted} toggleShortlist={toggleShortlist}/>;
+    if (route==='compare')           return <Compare go={go}/>;
+    if (route==='portfolio')         return <InvestorDashboard go={go}/>;
+    if (route==='notifications')     return <Notifications go={go}/>;
+    if (route==='investor-onboard')  return <InvestorOnboard go={go}/>;
+    if (route==='founder-onboard')   return <FounderOnboard go={go}/>;
+    if (route==='founder-dashboard') return <FounderDashboard go={go}/>;
+    if (route==='profile-settings')  return <ProfileSettings user={user}/>;
+    if (route==='admin')             return <AdminModeration go={go}/>;
+    if (route==='strategy')          return <Strategy/>;
+    if (route.startsWith('idea/')) {
+      const id = route.split('/')[1];
+      return <IdeaDetail ideaId={id} go={go} layout="split" voted={voted} toggleVote={toggleVote} shortlisted={shortlisted} toggleShortlist={toggleShortlist} onCommit={()=>setCommitFor(IDEAS.find(i=>i.id===id))}/>;
+    }
+    if (route.startsWith('founder/')) {
+      const id = route.split('/')[1];
+      return <FounderProfile founderId={id} go={go}/>;
+    }
+    return <EmptyState icon={Icon.search(22)} title="Page not found" body="This route doesn't exist." cta="Go home" onCta={()=>go('home')}/>;
+  };
+
+  return (
+    <div style={{display:'flex',minHeight:'100vh',background:TOKENS.bg}}>
+      <Nav current={navCurrent} go={go} user={user}/>
+
+      <main style={{flex:1,minWidth:0,display:'flex',flexDirection:'column',paddingBottom:isMobile?72:0}}>
+        <TopBar
+          title={meta.title}
+          kicker={meta.kicker}
+          onSearch={meta.showSearch?(v)=>setSearch(v):undefined}
+          search={search}
+          go={go}
+          right={!isMobile && (
+            <div style={{display:'flex',gap:8,alignItems:'center'}}>
+              {/* Layout switcher on discover */}
+              {route==='discover' && (
+                <div style={{display:'inline-flex',padding:2,background:'#efece4',borderRadius:7,border:`0.5px solid ${TOKENS.hair}`}}>
+                  {['editorial','grid','feed'].map(l=>(
+                    <button key={l} onClick={()=>setFeedLayout(l)} style={{
+                      padding:'4px 10px',borderRadius:5,border:0,cursor:'pointer',
+                      background:feedLayout===l?TOKENS.card:'transparent',
+                      fontFamily:SANS,fontSize:11,fontWeight:500,
+                      color:feedLayout===l?TOKENS.ink:TOKENS.ink3,
+                      boxShadow:feedLayout===l?'0 1px 2px rgba(20,18,12,0.06)':'none',
+                      textTransform:'capitalize',transition:'all 120ms',
+                    }}>{l}</button>
+                  ))}
+                </div>
+              )}
+              {/* Notification bell */}
+              <button onClick={()=>go('notifications')} style={{
+                position:'relative',width:36,height:36,borderRadius:8,
+                border:`0.5px solid ${TOKENS.hair}`,background:TOKENS.surface,
+                display:'flex',alignItems:'center',justifyContent:'center',
+                color:TOKENS.ink2,cursor:'pointer',
+              }}>
+                {Icon.bell(16)}
+                {unreadCount>0 && (
+                  <span style={{position:'absolute',top:6,right:6,width:8,height:8,borderRadius:999,background:TOKENS.raise,border:'1.5px solid #fbfaf6'}}/>
+                )}
+              </button>
+              {route!=='founder-onboard'   && <Btn variant="ghost"   size="sm" onClick={()=>go('founder-onboard')} icon={Icon.plus(12)}>List an idea</Btn>}
+              {route!=='investor-onboard'  && <Btn variant="primary" size="sm" onClick={()=>go('investor-onboard')}>Become an investor</Btn>}
+            </div>
+          )}
+        />
+
+        <div style={{flex:1,padding:isMobile?'20px 16px 24px':'36px 36px 80px',maxWidth:1280,width:'100%',alignSelf:'center'}}>
+          {renderContent()}
+        </div>
+      </main>
+
+      {commitFor && <CommitModal idea={commitFor} onClose={()=>setCommitFor(null)}/>}
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App/>);
+
+</script>
+</body>
+</html>
